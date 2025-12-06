@@ -56,10 +56,14 @@ public class TurbineService {
             .uri("/turbines?&limit=1")
             .retrieve()
             .body(ArrayList.class);
-            LinkedHashMap<String, String> lhm = (LinkedHashMap<String, String>)apiResponse.get(0);   // cast the object to a LinkedHashMap
+            try{
+            LinkedHashMap<String, String> lhm = (LinkedHashMap<String, String>) apiResponse.get(0);   // cast the object to a LinkedHashMap
             System.out.println(lhm.get("t_manu"));
             Turbine new_turb = new Turbine(lhm.get("t_manu"));
             this.saveTurbineToDatabase(new_turb);
+            } catch (Exception e) {
+                return "Unable to obtain data from the API";
+            }
         }catch (Error e){
             return "couldn't make is an object that you specified";
         }
