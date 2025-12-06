@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import java.util.Optional;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -35,7 +37,9 @@ public class TurbineController {
         turbineService.saveTurbineToDatabase(turbine);
         return " -- turbine obtained in the controller -- ";
     }
-    
 
-
+    @GetMapping("/demoCall")
+    public String demo_api_call() {
+        return turbineService.getATurbine();
+    }
 }

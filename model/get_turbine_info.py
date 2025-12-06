@@ -20,16 +20,18 @@ def get_turbine_info():
     for i in range(0, 50000):
 
         # make this print to the same line
-        print(f"at percentage {i / 50000}", flush=True, end="")
         base_url = f"https://energy.usgs.gov/api/uswtdb/v1/turbines?&offset={i}&limit=1"
         get_request = requests.get(base_url)
         if get_request.status_code == 200:
+            if i % 2000 == 0:
+                print(f"at percentage {i / 50000}", flush=True)
             turbine_json = get_request.json()[0]
-            seen_turbine_models.append(turbine_json['t_model'])
-            print()
-            print(f"at percentage {i / 50000}, New Turbine Model Found: {turbine_json['t_model']}")
-            print()
-    
+            if [turbine_json['t_model'], turbine_json['t_manu']]  not in seen_turbine_models:
+                seen_turbine_models.append([turbine_json['t_model'], turbine_json['t_manu']])
+                print()
+                print(f"at percentage {i / 50000}, New Turbine Model Found: {turbine_json['t_model']} manufacturer: {turbine_json['t_manu']}", flush=True, end="")
+                print()
+        
     print("there are " + str(len(seen_turbine_models)) + " unique turbine models")
 
     with open("turbine_models.txt", "w") as f:
