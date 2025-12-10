@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.micrometer.common.lang.NonNull;
+import jakarta.validation.constraints.Null;
 
 
 @Service
@@ -48,28 +49,28 @@ public class TurbineService {
 
     /* getTurbibe is a demo API call to the turbine repository */
     public String getATurbine(){
-
-       
-        // api response
         try{
+            // api response
             ArrayList<?> apiResponse = client.get()
-            .uri("/turbines?&limit=1")
+            .uri("/turbines?&limit=1&offset=5")
             .retrieve()
             .body(ArrayList.class);
-            try{
+
+            // cast response to a map
             LinkedHashMap<String, String> lhm = (LinkedHashMap<String, String>) apiResponse.get(0);   // cast the object to a LinkedHashMap
+
+            // make a new turbine object from the map object
             System.out.println(lhm.get("t_manu"));
             Turbine new_turb = new Turbine(lhm.get("t_manu"));
+
+            // save the new turbine to the database
             this.saveTurbineToDatabase(new_turb);
-            } catch (Exception e) {
-                return "Unable to obtain data from the API";
-            }
-        }catch (Error e){
+            return "Obtained a turbine with data " + new_turb.toString();
+
+        // catch exception in event of failure to 
+        }catch (Exception e){
             return "couldn't make is an object that you specified";
         }
-
-
-        return "made an API call";
     }
 
 }

@@ -1,13 +1,11 @@
 package com.johnmiller.buildaturbine.model;
-
-import org.hibernate.validator.internal.engine.groups.Sequence;
-
 import io.micrometer.common.lang.NonNull;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.Valid;
 
 @Entity
 public class Turbine {
@@ -17,7 +15,6 @@ public class Turbine {
     private Integer id;
 
     @Column
-    @NonNull
     private String model;
 
     // constructor for JPA and Jackson
@@ -25,7 +22,11 @@ public class Turbine {
     
     /* personal constructor for programmatic turbine creation */ 
     public Turbine(String typeOfTurbine){
+        if (typeOfTurbine == null){
+            throw new NullPointerException("the turbine cannot have a null class");
+        }else{
         this.model = typeOfTurbine;
+        }
     }
 
     // Getters
