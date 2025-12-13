@@ -3,7 +3,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.johnmiller.buildaturbine.model.TurbineService;
+import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
 
 @SpringBootApplication
 public class driver_code {

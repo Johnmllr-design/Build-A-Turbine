@@ -1,4 +1,4 @@
-package com.johnmiller.buildaturbine.model;
+package com.johnmiller.buildaturbine.data_and_backend_management;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
@@ -26,9 +26,9 @@ public class TurbineService {
     in a springful way,making use of spring-boot's application 
     context container to manage an instance of Turbine repository for us
     */
-    public TurbineService(TurbineRepository tbr, RestClient restClient){
+    public TurbineService(TurbineRepository tbr){
         this.turbineRepository = tbr;
-        this.client = restClient;
+        this.client = RestClient.builder().baseUrl("https://energy.usgs.gov/api/uswtdb/v1/").build();
     }
 
     /* saveTurbineToDatabase : send a turbine object
@@ -52,7 +52,7 @@ public class TurbineService {
         try{
             // api response
             ArrayList<?> apiResponse = client.get()
-            .uri("/turbines?&limit=1&offset=5")
+            .uri("/turbines?&limit=1&offset=50")
             .retrieve()
             .body(ArrayList.class);
 
@@ -61,7 +61,11 @@ public class TurbineService {
 
             // make a new turbine object from the map object
             System.out.println(lhm.get("t_manu"));
-            Turbine new_turb = new Turbine(lhm.get("t_manu"));
+            System.out.println(lhm);
+            Object object = lhm.get("p_year");
+            System.out.println(object);
+            System.out.println(object.getClass());
+            Turbine new_turb = new Turbine(lhm.get("t_manu"),  "eeifib");
 
             // save the new turbine to the database
             this.saveTurbineToDatabase(new_turb);

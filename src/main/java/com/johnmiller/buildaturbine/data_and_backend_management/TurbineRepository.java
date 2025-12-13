@@ -1,4 +1,4 @@
-package com.johnmiller.buildaturbine.model; 
+package com.johnmiller.buildaturbine.data_and_backend_management; 
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 

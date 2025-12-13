@@ -14,6 +14,7 @@ from typing import List
 from random import random
 import requests
 import numpy as np
+from utils import get_power_curve_dataset, get_string, to_array, to_array_float
 import csv
 
 base_url = "https://energy.usgs.gov/api/uswtdb/v1/turbines?&offset=1&limit=1"
@@ -24,45 +25,8 @@ class TurbineDatasetCurator:
 
     # initialize the class with the dataset
     def __init__(self):
-        self.power_curve_data = self.get_power_curve_dataset()
+        self.power_curve_data = get_power_curve_dataset()
         self.base_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
-   
-
-    
-    def get_turbine_curve(self, turbine_model: str) -> List:
-        # get the reduced string for ease of string comparison
-        turbine_model_reduced_string = self.get_string(turbine_model)
-
-        # Iterate through the power curves dataset to find a matching turbine's wind curve
-        for row in self.power_curve_data:
-            # get the row's string
-            reduced_row_string = self.get_string(row['name'])
-            if len(reduced_row_string) > 0:
-                if reduced_row_string in turbine_model_reduced_string or turbine_model_reduced_string in reduced_row_string:
-                    print(turbine_model +"  is in the dataset and matches with " + str(reduced_row_string) + " of length " + str(len(reduced_row_string)))
-                    if row['has_power_curve']:
-                        return row['power_curve_wind_speeds'], row['power_curve_values']
-        
-        # if no matching curve found, return none
-        return None
-
-
-
-            
-
-    # get the power curve data into an array for storage
-    def get_power_curve_dataset(self):
-        data = []
-        # Open the file for reading ('r')
-        with open("/Users/johnmiller/Desktop/buildaturbine/deep_learning/wind_turbine_library.csv", mode='r') as csvfile:
-
-            # parse each row into a dictionary
-            reader = csv.DictReader(csvfile)
-
-            # append each given row to the ground truth list
-            for row in reader:
-                data.append(row)
-        return data
 
         
         
@@ -70,44 +34,33 @@ class TurbineDatasetCurator:
     # Calculate_average_power uses the power curve we found to make manufacturer-accurate and historically thorough 
     # data-based calculations of daily electricity production
     def calculate_average_power(self, longitude:str, latitude:str, start_date: str, end_date:str, wind_speeds: List, corresponding_power_outputs: List):
+
         # track the number of days the turbine has been producing energy, and the amount of energy produced
+        # TODO: account for floats as wind speed keys for the power calculations
         days_productive = 0
         net_production = 0
 
-        # get the API wind data for the current turbine
         API_endpoint = self.base_url + latitude + "," + longitude + "/" + start_date + "/" + end_date +  "?key=X2VF5PX638PV2KE6F8BK37RX4&include=days&elements=datetime,windspeedmean"
-        print(API_endpoint)
-        result = requests.get(API_endpoint)
-        json_results = result.json()
-        daily_wind_values = json_results['days']
+        print("attempting to hit " + API_endpoint)
+        response = requests.get(API_endpoint)
 
-        # use the power curve in conjunction with the turbines data to get the turbines output for each day
-        for day in daily_wind_values:
-            wind_speed = int(day['windspeedmean'])
-            if wind_speed in wind_speeds:
+        if response.status_code == 200:
+            json = response.json()
+            daily_wind_values = json['days']
 
-                print(wind_speed +" is a valid wind speed in the curve")
-                # increment net production and increment number of observations
-                net_production += corresponding_power_outputs[wind_speeds.index(wind_speed)]
-                days_productive += 1
+            for day in daily_wind_values:
+                wind_speed = float(day['windspeedmean'])
+                print("checking if " + str(wind_speed) + " is in " + str(wind_speeds))
+                if wind_speed in wind_speeds:
+                    net_production += corresponding_power_outputs[wind_speeds.index(wind_speed)]
+                    days_productive += 1
+            
+            return (net_production / days_productive)
         
-        return (net_production / days_productive)
-
-
-
-    def get_lifetime_costs(self, model:str):
-        # TODO: implement finding of the lifetime cost of the turbine 
-        pass
-
-
-    # remove non alphanumeric chars 
-    def get_string(self, input_string : str) -> str:
-        ret = ""
-        for char in input_string:
-            if char.isalnum():
-                ret += char
-        return ret.lower()
-    
+        else:
+            print("unable to hit this endpoint")
+            print(response.status_code)
+            return None    
 
     # create_dataset provides the core functionality for creating the inputs + 
     # ground truth information for the pytorch model to learn from. It iterates throug
@@ -116,18 +69,19 @@ class TurbineDatasetCurator:
     def get_dataset(self):
         done_processing = False
         dataset = []
-        index = 0
+        index = 1
         while not done_processing:
 
             # make an API call to the USGS
             new_datapoint = []  # holder of new data
-            base_url = f"https://energy.usgs.gov/api/uswtdb/v1/turbines?&offset={index}&limit=1"
+            base_url = f"https://energy.usgs.gov/api/uswtdb/v1/turbines?&offset={index * 1005}&limit=1"
             response = requests.get(base_url)
 
-            # If able to get a new turbine from the query, get it's information
-            if response.status_code != 200:
-                done_processing = True
-                print("processign terminated")
+            # If unable to get turbine information, end early
+            if response.status_code != 200 or len(response.json()) == 0:
+                print("HERE: Unable to get a new input turbine. the response was " + str(response.status_code))
+
+            # otherwise, if able to get a new turbine from the query, get it's information
             else:
                 turbine_info = response.json()[0]
                 longitude = turbine_info['xlong']
@@ -137,23 +91,48 @@ class TurbineDatasetCurator:
                 turbine_manufacturer = turbine_info['t_manu']
 
                 # Get the turbine power curve based on the 
-                wind_speeds, power_outputs = self.get_turbine_curve(turbine_model, turbine_manufacturer)
+                if turbine_model != None:
+                    result = self.get_turbine_curve(turbine_model)
+                    if result != None:
+                        start_date = str(year_operational) + "-01-01"
+                        end_date = "2025-12-12"
+                        average_power = self.calculate_average_power(str(longitude), str(latitude), start_date, end_date, result[0], result[1])
+                        # TODO: implement lifelong costs of this turbine to calculate the gorund truth lifetime-kWd/lifetime cose value
+                        
+                        
 
-                # use the power curve for the given model to calculate the average power output of the turbine per day
-                start_date = year_operational + "01/01/" + year_operational     # TODO: fix this
-                current_date = "06/06/2025"                                     # TODO: fix this
-                lifetime_average_daily_power = self.calculate_average_power(longitude, latitude, start_date, current_date)
-
-                # use the finance method to determine the cost of setting up and maintaining this turbine over time
-                lifetime_operational_cost = self.get_lifetime_costs(turbine_model)
-
-                # ground truth value, represented as daily kiloWattage over dollar
-                kW_per_dollar = lifetime_average_daily_power / lifetime_operational_cost
-
-                new_data = [[longitude, latitude, turbine_model], [kW_per_dollar]]
-                dataset.append(new_data)
+                    # go to next possible turbine
+                    else:
+                        print(turbine_model + " power curve not in dataset")
+            
+            index += 1      # go to next turbine
         
-        return dataset
+        
+    
+
+    # find the matching furve for the provided turbine
+    def get_turbine_curve(self, turbine_model: str) -> List:
+            # get the reduced string for ease of string comparison
+            turbine_model_reduced_string = get_string(turbine_model)
+
+            # Iterate through the power curves dataset to find a matching turbine's wind curve
+            for row in self.power_curve_data:
+                # get the row's string
+                reduced_row_string = get_string(row['name'])
+                if len(reduced_row_string) > 0:
+                    if reduced_row_string in turbine_model_reduced_string or turbine_model_reduced_string in reduced_row_string:
+                        if row['has_power_curve'] == "True":
+                           return to_array_float(row['power_curve_wind_speeds']), to_array_float(row['power_curve_values'])
+                        else:
+                            return None
+            
+            # if no matching curve found, return none
+            return None
+
+
+    def get_lifetime_costs(self, model:str):
+        # TODO: implement finding of the lifetime cost of the turbine 
+        pass
 
 
 
@@ -161,13 +140,10 @@ class TurbineDatasetCurator:
 dummy_result = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/London,UK/last30days?key=X2VF5PX638PV2KE6F8BK37RX4&include=days&unitGroup=metric&elements=datetime,windspeedmean"
 
 # test = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Denver,CO?unitGroup=metric&key=YOUR_API_KEY&contentType=csv&include=days&elements=datetime,temp,windspeed50,winddir50,windspeed80,winddir80,windspeed100,winddir100"
-# I need an upgraded plan for this one
 
 
-result = requests.get(dummy_result)
-print(result)
-jsonn = result.json()
-daily_data = jsonn['days']
-for day in daily_data:
-    print(day)
-print(jsonn['queryCost'])
+obj = TurbineDatasetCurator()
+obj.get_dataset()
+
+
+

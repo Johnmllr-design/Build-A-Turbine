@@ -4,9 +4,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.johnmiller.buildaturbine.model.TurbineService;
-import com.johnmiller.buildaturbine.model.TurbineStatus;
-import com.johnmiller.buildaturbine.model.Turbine;
+import com.johnmiller.buildaturbine.data_and_backend_management.Turbine;
+import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
+import com.johnmiller.buildaturbine.data_and_backend_management.TurbineStatus;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
