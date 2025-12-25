@@ -22,26 +22,29 @@ public class TurbineController {
 
     /* Welcome string*/
 
-    @GetMapping("/showuser/{username}")
-    public String showUsername(@PathVariable String username) {
+    @GetMapping("/getUser/{username}")
+    public String getUser(@PathVariable String username) {
+        if (username.length() == 0){
+            return "Username cannot be null";
+        }
         String currentProfile = turbineService.getUser(username);
         return currentProfile;
     }
 
-    @GetMapping("/demoCall")
-    public String demo_api_call() {
-        return turbineService.makeNewUser("John Miller");
-    }
 
     @GetMapping("/makenewuser/{username}")
     public String makeNewUser(@PathVariable String username) {
+        if (username.length() == 0){
+            return "Username cannot be null";
+        }
         return turbineService.makeNewUser(username);
     }
 
     @GetMapping("/addturbine/{username}/{type}/{date}")
     public String addTurbine(@PathVariable String username, @PathVariable String type, @PathVariable String date) {
-
-        System.out.printf("adding a %s to %s's profile\n", type, username);
+        if (username.length() == 0 || type.length() == 0 || date.length() == 0){
+            return "Username and tyrbine information cannot be null";
+        }
         return turbineService.addTurbine(username, type, date);
     }
 }

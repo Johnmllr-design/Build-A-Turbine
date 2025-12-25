@@ -26,10 +26,11 @@ public class UserProfile{
     }
 
     public void addATurbine(String turbineModel, String turbineDate){
+        // make a new turbine object
         Turbine newTurbine = new Turbine(turbineModel, turbineDate);
-        System.out.printf("in UserRepository: adding %s\n", turbineModel);
+
+        // add the object to the user's collection
         userTurbines.add(newTurbine);
-        System.out.println(userTurbines);
     }
 
     public void setUserName(String name){
