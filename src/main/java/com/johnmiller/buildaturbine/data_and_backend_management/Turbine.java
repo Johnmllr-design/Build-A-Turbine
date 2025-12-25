@@ -1,27 +1,17 @@
 package com.johnmiller.buildaturbine.data_and_backend_management;
-import io.micrometer.common.lang.NonNull;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.Valid;
 
-@Entity
+import jakarta.persistence.Embeddable;
+
+@Embeddable
 public class Turbine {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @Column
     private String model;
-
-    @Column
     private String date;
 
-    // constructor for JPA and Jackson
-    public Turbine() {}
+    /* no-arg constructor for spring */
+    public Turbine(){
+    }
+
     
     /* personal constructor for programmatic turbine creation */ 
     public Turbine(String typeOfTurbine, String date){
@@ -32,15 +22,6 @@ public class Turbine {
             this.date = date;
         }
     }
-
-    public Integer getId(){
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
 
     public String getTurbineModel(){
         return model;

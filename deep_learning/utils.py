@@ -60,3 +60,24 @@ def to_array_float(array_string: str):
     return ret
 
 
+# Find the corresponding key for the wind power curve
+def match_key_to_value(key: float, corresponding_values: List):
+    if key > max(corresponding_values):
+        return 0
+    else:
+        max_difference = 10000
+        best_index = 0
+        for i in range(0, len(corresponding_values)):
+            if abs(corresponding_values[i] - key) < max_difference:
+                max_difference = abs(corresponding_values[i] - key)
+                best_index = i
+        return best_index
+    
+
+def string_to_int(s):
+    ret = ""
+    for char in s:
+        ret += str(ord(char))
+        ret += "0"
+    print(ret)
+    return int(ret)

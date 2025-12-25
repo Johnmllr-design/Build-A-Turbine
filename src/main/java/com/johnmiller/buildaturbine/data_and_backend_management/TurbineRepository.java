@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  the repository CRUD operations, which provides us with leeway to simply inject
  the repository into other classes */
 @Repository
-interface TurbineRepository extends JpaRepository<Turbine, Integer>{
+interface TurbineRepository extends JpaRepository<UserProfile, String>{
 }
 
 

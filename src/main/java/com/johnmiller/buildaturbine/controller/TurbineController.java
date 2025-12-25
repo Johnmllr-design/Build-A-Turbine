@@ -1,19 +1,9 @@
 package com.johnmiller.buildaturbine.controller;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.johnmiller.buildaturbine.data_and_backend_management.Turbine;
 import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
-import com.johnmiller.buildaturbine.data_and_backend_management.TurbineStatus;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import java.util.Optional;
-import org.springframework.web.bind.annotation.RequestParam;
-
 
 
 
@@ -32,15 +22,26 @@ public class TurbineController {
 
     /* Welcome string*/
 
-    @PostMapping("/post")
-    public String postMethodName(@RequestBody Turbine turbine) {
-        System.out.printf("the provided entity is %s with id of %d\n", turbine.getTurbineModel(), turbine.getId());
-        turbineService.saveTurbineToDatabase(turbine);
-        return " -- turbine obtained in the controller -- ";
+    @GetMapping("/showuser/{username}")
+    public String showUsername(@PathVariable String username) {
+        String currentProfile = turbineService.getUser(username);
+        return currentProfile;
     }
 
     @GetMapping("/demoCall")
     public String demo_api_call() {
-        return turbineService.getATurbine();
+        return turbineService.makeNewUser("John Miller");
+    }
+
+    @GetMapping("/makenewuser/{username}")
+    public String makeNewUser(@PathVariable String username) {
+        return turbineService.makeNewUser(username);
+    }
+
+    @GetMapping("/addturbine/{username}/{type}/{date}")
+    public String addTurbine(@PathVariable String username, @PathVariable String type, @PathVariable String date) {
+
+        System.out.printf("adding a %s to %s's profile\n", type, username);
+        return turbineService.addTurbine(username, type, date);
     }
 }
