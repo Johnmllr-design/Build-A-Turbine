@@ -21,6 +21,27 @@ def get_power_curve_dataset():
     return data
 
 
+# get the user turbine options
+def get_user_options():
+    data = []
+    # Open the file for reading ('r')
+    with open("/Users/johnmiller/Desktop/buildaturbine/deep_learning/wind_turbine_library.csv", mode='r') as csvfile:
+
+        # parse each row into a dictionary
+        reader = csv.DictReader(csvfile)
+
+        # append each given row to the ground truth list
+        for row in reader:
+            if row["has_power_curve"]:
+                data.append([row["manufacturer"], row["name"]])
+    with open("makes_and_models.txt", mode="w") as text_file:
+        text_file.write(str(data))
+        text_file.flush()
+    
+    
+
+
+
  # remove non alphanumeric chars 
 def get_string(input_string : str) -> str:
     ret = ""
@@ -81,3 +102,6 @@ def string_to_int(s):
         ret += "0"
     print(ret)
     return int(ret)
+
+
+get_user_options()

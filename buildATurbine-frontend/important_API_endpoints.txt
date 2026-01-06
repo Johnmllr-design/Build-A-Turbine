@@ -1,0 +1,3 @@
+"/getUser/{username}"
+"/makenewuser/{username}"
+"/addturbine/{username}/{type}/{date}"

@@ -159,11 +159,6 @@ class TurbineDatasetCurator:
         print("finding the cost by multiplying 1000$ per rated kilowatt times the rating of " + str(rated_power) + " kilowatts")
         return (1000 * rated_power)
         
-        
-
-
-
-
 
 
 obj = TurbineDatasetCurator()
