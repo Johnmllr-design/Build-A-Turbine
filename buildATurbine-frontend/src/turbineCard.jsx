@@ -16,7 +16,7 @@ function TurbineCard(props) {
 
   return (
     <div>
-      Turbine: {turbine.type} in location {turbine.long}, {turbine.lat}<hr/>
+      Turbine: {turbine.type} in location {turbine.long}, {turbine.lat}
     </div>
   )
 }

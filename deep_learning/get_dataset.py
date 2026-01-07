@@ -69,11 +69,10 @@ class TurbineDatasetCurator:
     def get_dataset(self):
         done_processing = False
         dataset = []
-        index = 1500
+        index = 0
         processed = 0
         while not done_processing:
-            print("index " + str(index))
-
+            print(index)
             # make an API call to the USGS
             new_datapoint = []  # holder of new data
             response = requests.get(self.base_turbine_url + "offset=" + str(index) + "&limit=1")
@@ -81,12 +80,7 @@ class TurbineDatasetCurator:
 
 
             # If unable to get turbine information, skip turbine and continue
-            if response.status_code != 200 or len(response.json()) == 0:
-                print("HERE: Unable to get a new input turbine. the response was " + str(response.status_code))
-                
-
-            # otherwise, if able to get a new turbine from the query, get it's information
-            else:
+            if response.status_code == 200 and len(response.json()) != 0:
                 turbine_info = response.json()[0]
                 longitude = turbine_info['xlong']
                 latitude = turbine_info['ylat']
@@ -106,11 +100,11 @@ class TurbineDatasetCurator:
                         average_power = (self.calculate_average_power(str(longitude), str(latitude), start_date, end_date, result[0], result[1]) * 24) # convert to kWhours
                         costs = self.get_costs(float(turbine_rated_power_in_kW))
 
-                        print()
+                        print("INDEX : ", index)
                         print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + "kilowatt hours per day during it's lifetime")
                         print("this turbine has costed " + str(costs))
                         print("# GROUND TRUTH: dollars for the average kWhours = " + str(costs / average_power))
-                        print("on to the next turbine\n")
+                        print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
                         print()
 
 
@@ -123,7 +117,7 @@ class TurbineDatasetCurator:
 
                 
             # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-            if index == 10000 or processed == 2:
+            if index == 10000 or processed == 100:
                 done_processing = True
 
 
@@ -156,7 +150,6 @@ class TurbineDatasetCurator:
     # return the industry standard $100/kW of rated power times the actual rated power to 
     # obtain a coarse understanding of the cost to build the given turbine
     def get_costs(self, rated_power : float):
-        print("finding the cost by multiplying 1000$ per rated kilowatt times the rating of " + str(rated_power) + " kilowatts")
         return (1000 * rated_power)
         
 

@@ -23,7 +23,7 @@ public class TurbineService {
         UserProfile up = new UserProfile(username);
 
         //save the user's profile to DB
-        Object ob = turbineRepository.save(up);
+        turbineRepository.save(up);
 
         // Return a successful message
         return "made a new user with username " + username;

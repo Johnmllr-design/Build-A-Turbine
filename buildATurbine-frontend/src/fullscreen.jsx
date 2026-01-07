@@ -17,28 +17,68 @@ function Fullscreen() {
     const centerPos = {lat : 40, lng : 265};
     const [turbines, setTurbine] = useState([]);
 
+    /* dummy api call */
+    async function callBackend(){
+        try{
+        const response = await fetch("http://localhost:8080/dummy");
+        const result = await response.text();
+        console.log(result);
+        }catch(error){
+            console.log(error);
+        }
+    }
+    /* make a new user account */
+     async function login(username){
+        try{
+        const apiString = "http://localhost:8080/makenewuser/" + username;
+        const response = await fetch(apiString);
+        const result = await response.text();
+        console.log(result);
+        }catch(error){
+            console.log(error);
+        }
+    }
+
+
     
 
     return(
-        <div style={{display : 'flex', borderWidth :'10px'}}>
+        <div style={{display : '-ms-flexbox', borderWidth :'10px'}}>
+            <textarea id='uname' placeholder='provide userame'></textarea>
+            <button onClick={() => {login(document.getElementById('uname').value)}}></button>
             {/*turbine sidebar component*/}
             <TurbineSidebar newTurbines={turbines}/>
 
-            {/*Map component*/}
+            {/*api provider component*/}
             <APIProvider apiKey='AIzaSyBTgKunKe6FIf4zdhWSjZh1oZZ76lhEG9I'>
-                <div style={{height : "590px", width : "1390px", borderStyle : 'solid', borderWidth : "10px", borderColor: "grey"}}>
-                    <Map id="map" colorScheme:black mapId="8a273d3da3a319bb876b5293" center={centerPos} zoom={4.3} 
+                <div style={{height : "590px", width : "1390px", borderStyle : 'solid', borderWidth : "10px", borderColor: "grey", touchAction : 'none'}}>
+                    
+                    {/*Map component*/}
+                    <Map 
+                    id="map" 
+                    colorScheme='DARK'
+                    mapId="8a273d3da3a319bb876b5293" 
+                    center={centerPos} zoom={3.5} 
+                    zoomControl={true} 
+                    scrollwheel={true}
                     onClick={(e) => {
                     document.getElementById("long").textContent = e.detail.latLng.lng 
                     document.getElementById("lat").textContent = e.detail.latLng.lat
-                    document.getElementById("type").placeholder = "provide the type of turbine you want"
-                    }}>
-                    {
-                    turbines.map((turb, i) => {return(
-                     <AdvancedMarker key={i} position={{lat : Number(turb.lat), lng :  Number(turb.long)}}>
-                        <Pin background = "pink" glyphColor="pink" borderColor="black"/>
-                    </AdvancedMarker>)})
-                    }
+                    document.getElementById("type").placeholder = "provide the type of turbine you want"}}
+
+                    style={{ height: "100%", width: "100%" }}
+                    defaultCenter={centerPos}
+                    defaultZoom={7.5}
+                    gestureHandling="greedy">
+                        {/*make the individual pins */}
+                        {
+                        turbines.map((turb, i) => 
+                        {return(
+                            <AdvancedMarker key={i} position={{lat : Number(turb.lat), lng :  Number(turb.long)}} onClick={() => {callBackend()}}>
+                                <Pin background = "pink" glyphColor="pink" borderColor="black"/>
+                            </AdvancedMarker>)
+                        })
+                        }
                     </Map>
                 </div>
             </APIProvider>
