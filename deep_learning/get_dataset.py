@@ -16,6 +16,16 @@ import requests
 import numpy as np
 from utils import get_power_curve_dataset, get_string, to_array_float, match_key_to_value, string_to_int
 import csv
+import signal
+
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException("Function timed out")
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 
 
@@ -48,7 +58,7 @@ class TurbineDatasetCurator:
             json = response.json()
             daily_wind_values = json['days']
 
-            for day in daily_wind_values:
+            for i, day in enumerate(daily_wind_values):
                 wind_speed = float(day['windspeedmean'])
                 best_key_index = match_key_to_value(wind_speed, wind_speeds)
                 net_electricity_production += corresponding_power_outputs[best_key_index]
@@ -58,7 +68,7 @@ class TurbineDatasetCurator:
             return (net_electricity_production / days_productive)
         
         else:
-            print("unable to access this turbines wind history")
+            print("unable to access this turbines wind history from the weather API")
             return None
             
      
@@ -97,34 +107,60 @@ class TurbineDatasetCurator:
                     else:
                         start_date = str(year_operational) + "-01-01"
                         end_date = "2025-12-12"
-                        average_power = (self.calculate_average_power(str(longitude), str(latitude), start_date, end_date, result[0], result[1]) * 24) # convert to kWhours
-                        costs = self.get_costs(float(turbine_rated_power_in_kW))
+                        
+                        try:
+                            signal.alarm(30)  # ⏱ timeout in seconds
 
-                        print("INDEX : ", index)
-                        print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + "kilowatt hours per day during it's lifetime")
-                        print("this turbine has costed " + str(costs))
-                        print("# GROUND TRUTH: dollars for the average kWhours = " + str(costs / average_power))
-                        print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
-                        print()
+                            res = self.calculate_average_power(
+                                str(longitude),
+                                str(latitude),
+                                start_date,
+                                end_date,
+                                result[0],
+                                result[1]
+                            )
+
+                        except TimeoutException:
+                            print("❌ calculate_average_power took too long")
+                            res = None
+
+                        finally:
+                            signal.alarm(0)  # cancel the alarm
+                        if res != None:
+                            print("the average kwH per day is ")
+                            average_power = (res * 24) # convert to total kWhours in the given day day
+                            costs = self.get_costs(float(turbine_rated_power_in_kW))
+
+                            print("INDEX : ", index)
+                            print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + " total kilowatt hours per day (24 * average kWh) during it's lifetime")
+                            print("this turbine has costed " + str(costs))
+                            print("# GROUND TRUTH: dollars for the average kWhours = " + str(costs / average_power))
+                            print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
+                            print()
 
 
-                        # GROUND TRUTH: dollars for each average mWhours per day
-                        ground_truth_dollar_per_kWh = costs / average_power
+                            # GROUND TRUTH: dollars for each average mWhours per day
+                            ground_truth_dollar_per_kWh = costs / average_power
 
-                        # append the observation
-                        dataset.append([1, longitude, latitude, ground_truth_dollar_per_kWh])
-                        processed += 1
+                            # append the observation (1 is a placeholder for the turbine type)
+                            dataset.append([turbine_manufacturer + " " + turbine_model, longitude, latitude, ground_truth_dollar_per_kWh])
+                            processed += 1
 
-                
-            # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-            if index == 10000 or processed == 100:
-                done_processing = True
+                    
+                # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
+                if index == 10000 or processed == 1:
+                    done_processing = True
 
 
         # save the tensors of data
-        dataset_as_tensor = torch.tensor(dataset, dtype=torch.float32)
-        torch.save(dataset_as_tensor, f = "dataset.pt")
-    
+        with open("dataset.txt", 'w') as f:
+            for obs in dataset:
+                f.write(str(obs))
+            f.flush()
+        f.close()
+        # dataset_as_tensor = torch.tensor(dataset, dtype=torch.float32)
+        # torch.save(dataset_as_tensor, f = "dataset.pt")
+        
         
     
 
@@ -147,7 +183,7 @@ class TurbineDatasetCurator:
             return None
 
 
-    # return the industry standard $100/kW of rated power times the actual rated power to 
+    # return the industry standard $1000/kW of rated power times the actual rated power to 
     # obtain a coarse understanding of the cost to build the given turbine
     def get_costs(self, rated_power : float):
         return (1000 * rated_power)
