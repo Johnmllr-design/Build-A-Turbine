@@ -134,7 +134,7 @@ class TurbineDatasetCurator:
                             print("INDEX : ", index)
                             print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + " total kilowatt hours per day (24 * average kWh) during it's lifetime")
                             print("this turbine has costed " + str(costs))
-                            print("# GROUND TRUTH: dollars for the average kWhours = " + str(costs / average_power))
+                            print("# GROUND TRUTH: dollars for the average daily kWhour production = " + str(costs / average_power))
                             print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
                             print()
 
@@ -148,7 +148,7 @@ class TurbineDatasetCurator:
 
                     
                 # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-                if index == 10000 or processed == 1:
+                if index == 15000 or processed == 1000:
                     done_processing = True
 
 
