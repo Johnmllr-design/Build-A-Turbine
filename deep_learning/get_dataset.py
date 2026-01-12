@@ -143,23 +143,23 @@ class TurbineDatasetCurator:
                             ground_truth_dollar_per_kWh = costs / average_power
 
                             # append the observation (1 is a placeholder for the turbine type)
-                            dataset.append([turbine_manufacturer + " " + turbine_model, longitude, latitude, ground_truth_dollar_per_kWh])
+                            dataset.append([turbine_manufacturer + " " + turbine_model, latitude, longitude, ground_truth_dollar_per_kWh])
                             processed += 1
 
                     
                 # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-                if index == 15000 or processed == 1000:
+                if index == 15000 or processed == 1:
                     done_processing = True
 
 
         # save the tensors of data
-        with open("dataset.txt", 'w') as f:
+        with open("dataset2.txt", 'w') as f:
             for obs in dataset:
                 f.write(str(obs))
             f.flush()
         f.close()
-        # dataset_as_tensor = torch.tensor(dataset, dtype=torch.float32)
-        # torch.save(dataset_as_tensor, f = "dataset.pt")
+        dataset_as_tensor = torch.tensor(dataset, dtype=torch.float32)
+        torch.save(dataset_as_tensor, f = "dataset2.pt")
         
         
     

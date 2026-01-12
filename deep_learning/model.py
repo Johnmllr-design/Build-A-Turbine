@@ -7,7 +7,7 @@ class TurbinePredictionModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.sigmoid = nn.Sigmoid()
-        self.initial_layer = nn.Linear(in_features=6, out_features=30, bias=True)
+        self.initial_layer = nn.Linear(in_features=5, out_features=30, bias=True)
         self.hidden_layer = nn.Linear(in_features=30, out_features=15, bias=True)
         self.output_layer = nn.Linear(in_features=15, out_features=1)
 

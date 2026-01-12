@@ -1,6 +1,5 @@
 
-
-const options = [['Enercon', 'E-141/4200 EP 4'], ['Enercon', 'E-126/4200 EP4'], ['Enercon', 'E-101/3500 E2'], ['Enercon', 'E-115/3200'], 
+[['Enercon', 'E-141/4200 EP 4'], ['Enercon', 'E-126/4200 EP4'], ['Enercon', 'E-101/3500 E2'], ['Enercon', 'E-115/3200'], 
 ['Enercon', 'E-101/3050 E2'], ['Enercon', 'E-115/3000'], ['Enercon', 'E-82/3000'],['Vensys', 'VENSYS77 1.5MW'], ['Vensys', 'VENSYS70 1.5MW'], 
 ['GE Wind', 'Haliade 150-6MW'], ['Enercon', 'E-92/2350'], ['Enercon', 'E-82/2350'], ['Enercon', 'E-70/2300 E4'], ['Enercon', 'E-82/2000 E2'], 
 ['Enercon', 'E-70/2000'], ['Enercon', 'E-53/800'], ['Nordex', ''], ['GE Wind', 'GE 4.8-158'], ['GE Wind', 'GE 3.6-137'], 

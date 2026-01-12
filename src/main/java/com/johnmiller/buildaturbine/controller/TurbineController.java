@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RequestMapping("")
-@CrossOrigin(origins="http://localhost:5175")
+@CrossOrigin(origins="http://localhost:5176")
 @RestController
 public class TurbineController {
     
@@ -55,6 +55,14 @@ public class TurbineController {
         if (username.length() == 0 || type.length() == 0 || date.length() == 0){
             return "Username and tyrbine information cannot be null";
         }
-        return turbineService.addTurbine(username, type, date);
+        String response = turbineService.addTurbine(username, type, date);;
+        System.out.println(response);
+        return response;
+    }
+
+    /* Making a new prediction */
+    @GetMapping("/makeprediction")
+    public Double makePrediction() {
+        return Math.random();
     }
 }

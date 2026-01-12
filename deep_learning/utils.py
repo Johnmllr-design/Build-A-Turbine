@@ -103,5 +103,11 @@ def string_to_int(s):
     print(ret)
     return int(ret)
 
+# find the corresponding turbine embedding
+def find_embeddings(type, types):
+    for i, possible in enumerate(types):
+        if possible == type:
+            return i
+    return -1
 
 get_user_options()
