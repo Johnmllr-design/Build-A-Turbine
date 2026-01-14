@@ -13,7 +13,7 @@ class clean_dataset():
         for i, value in enumerate(strings):
             if index == 5:
                 cp = cur[1]
-                cur[1] = cur[2] # fix long/lat flipflop
+                cur[1] = cur[2] # fix long/lat flipflop so that is it lat/long
                 cur[2] = cp
                 dataset.append(cur)
                 cur = []
@@ -27,7 +27,7 @@ class clean_dataset():
             index += 1
         
         # normalize the data
-        dataset = self.normalize_data(dataset)
+        # dataset = self.normalize_data(dataset)
         
 
 
@@ -39,8 +39,8 @@ class clean_dataset():
         turbine_tensor_embeddings = torch.rand(len(turbines), 3) 
 
         # save the embeddings, the turbine types, and the dataset
-        torch.save(turbine_tensor_embeddings, f="type_embeddings.pt")
-        numpy.save('dataset.npy', dataset)
+        torch.save(turbine_tensor_embeddings, f="type_embeddings_rawdata.pt")
+        numpy.save('dataset_rawdata.npy', dataset)
         numpy.save('turbine_types.npy', turbines)
     
 
@@ -71,6 +71,8 @@ class clean_dataset():
         rangeLat = abs(max(lat) - min(lat))
         rangeLong = abs(max(long) - min(long))
         rangeObs = abs(max(pred) - min(pred))
+        min_max_values = [minLat, rangeLat, minLong, rangeLong, minobs, rangeObs]   # save the min/max range normalization values for normalizing the inference
+        numpy.save(file='min_max_normalization_values.npy', arr=min_max_values)
 
         # normalize the dataset
         for observation in dataset:
@@ -81,13 +83,19 @@ class clean_dataset():
 
 
 
+
+
 # driver code for a one-time cleaning and saving of the sataset to the directory
+#
+# this dataset returns the normalized dataset as a numpy array with string turbine labels
+# example: ['Vestus, 0.4, 0.33, 0.21]
+#
+
 if __name__ == '__main__':
     clean_dataset().clean_data()
-    dataset = numpy.load('dataset.npy')
     print("")
-    print(dataset)
-    print(torch.load('type_embeddings.pt'))
+    arr = numpy.load('dataset_rawdata.npy')
+    print(arr)
 
 
         

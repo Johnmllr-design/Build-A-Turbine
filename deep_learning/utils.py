@@ -2,6 +2,8 @@
 import csv
 import os
 from typing import List
+import torch
+import numpy
 
 
 
@@ -110,4 +112,44 @@ def find_embeddings(type, types):
             return i
     return -1
 
-get_user_options()
+# normalize and standardize a provided input to a tensor-ready option
+def normalize_input(input:List):
+
+    normalized_input = []
+
+    normalization_values = numpy.load('min_max_normalization_values.npy')
+    type_strings = numpy.load('turbine_types.npy')
+    type_embeddings = torch.load('type_embeddings.pt')
+    print(normalization_values)
+    print(type_strings)
+    print(type_embeddings)
+    correct_embedding = type_embeddings[find_embeddings(input[0], type_strings)]
+    for value in correct_embedding:
+        normalized_input.append(value)
+    normalized_input.append((input[1] - normalization_values[0] / normalization_values[1])) # normalize the latitude
+    normalized_input.append((input[2] - normalization_values[2] / normalization_values[3])) # normalize the latitude
+    print("normalized input is ", normalized_input)
+    return normalized_input
+
+# normalize and standardize a provided input to a tensor-ready option
+def normalize_input_2(input:List):
+    normalized_input = []
+    type_strings = numpy.load('turbine_types.npy')
+    type_embeddings = torch.load('type_embeddings.pt')
+    correct_embedding = type_embeddings[find_embeddings(input[0], type_strings)]
+    for value in correct_embedding:
+        normalized_input.append(value)
+    normalized_input.append(input[1])
+    normalized_input.append(input[2])
+    print("normalized input is ", normalized_input)
+    return normalized_input
+
+
+# normalize and standardize a provided input to a tensor-ready option
+def de_normalize_output(output):
+    normalization_values = numpy.load('min_max_normalization_values.npy')
+    return output * normalization_values[5] + normalization_values[4]
+
+
+
+

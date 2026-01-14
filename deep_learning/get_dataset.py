@@ -77,89 +77,89 @@ class TurbineDatasetCurator:
     # to learn from. It iterates throug the turbine dataset, retrieving the necessary data from each turbine to 
     # quantify the turbines' value
     def get_dataset(self):
-        done_processing = False
         dataset = []
-        index = 0
-        processed = 0
-        while not done_processing:
-            print(index)
-            # make an API call to the USGS
-            new_datapoint = []  # holder of new data
-            response = requests.get(self.base_turbine_url + "offset=" + str(index) + "&limit=1")
-            index += 1      
+        try:
+            done_processing = False
+            index = 0
+            processed = 0
+            while not done_processing:
+                print(index)
+                # make an API call to the USGS
+                new_datapoint = []  # holder of new data
+                response = requests.get(self.base_turbine_url + "offset=" + str(index) + "&limit=1")
+                index += 1      
 
 
-            # If unable to get turbine information, skip turbine and continue
-            if response.status_code == 200 and len(response.json()) != 0:
-                turbine_info = response.json()[0]
-                longitude = turbine_info['xlong']
-                latitude = turbine_info['ylat']
-                year_operational = turbine_info['p_year']
-                turbine_model = turbine_info['t_model']
-                turbine_manufacturer = turbine_info['t_manu']
-                turbine_rated_power_in_kW = turbine_info['t_cap']
+                # If unable to get turbine information, skip turbine and continue
+                if response.status_code == 200 and len(response.json()) != 0:
+                    turbine_info = response.json()[0]
+                    longitude = turbine_info['xlong']
+                    latitude = turbine_info['ylat']
+                    year_operational = turbine_info['p_year']
+                    turbine_model = turbine_info['t_model']
+                    turbine_manufacturer = turbine_info['t_manu']
+                    turbine_rated_power_in_kW = turbine_info['t_cap']
 
-                # Get the turbine power curve based on the 
-                if turbine_model != None:
-                    result = self.get_turbine_curve(turbine_model)
-                    if result == None:
-                        continue
-                    else:
-                        start_date = str(year_operational) + "-01-01"
-                        end_date = "2025-12-12"
+                    # Get the turbine power curve based on the 
+                    if turbine_model != None:
+                        result = self.get_turbine_curve(turbine_model)
+                        if result == None:
+                            continue
+                        else:
+                            start_date = str(year_operational) + "-01-01"
+                            end_date = "2025-12-12"
+                            
+                            try:
+                                signal.alarm(30)  # ⏱ timeout in seconds
+
+                                res = self.calculate_average_power(
+                                    str(longitude),
+                                    str(latitude),
+                                    start_date,
+                                    end_date,
+                                    result[0],
+                                    result[1]
+                                )
+
+                            except TimeoutException:
+                                print("❌ calculate_average_power took too long")
+                                res = None
+
+                            finally:
+                                signal.alarm(0)  # cancel the alarm
+                            if res != None:
+                                print("the average kwH per day is ")
+                                average_power = (res * 24) # convert to total kWhours in the given day day
+                                costs = self.get_costs(float(turbine_rated_power_in_kW))
+
+                                print("INDEX : ", index)
+                                print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + " total kilowatt hours per day (24 * average kWh) during it's lifetime")
+                                print("this turbine has costed " + str(costs))
+                                print("# GROUND TRUTH: dollars for the average daily kWhour production = " + str(costs / average_power))
+                                print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
+                                print()
+
+
+                                # GROUND TRUTH: dollars for each average mWhours per day
+                                ground_truth_dollar_per_kWh = costs / average_power
+
+                                # append the observation (1 is a placeholder for the turbine type)
+                                dataset.append([turbine_manufacturer + " " + turbine_model, latitude, longitude, ground_truth_dollar_per_kWh])
+                                processed += 1
+
                         
-                        try:
-                            signal.alarm(30)  # ⏱ timeout in seconds
-
-                            res = self.calculate_average_power(
-                                str(longitude),
-                                str(latitude),
-                                start_date,
-                                end_date,
-                                result[0],
-                                result[1]
-                            )
-
-                        except TimeoutException:
-                            print("❌ calculate_average_power took too long")
-                            res = None
-
-                        finally:
-                            signal.alarm(0)  # cancel the alarm
-                        if res != None:
-                            print("the average kwH per day is ")
-                            average_power = (res * 24) # convert to total kWhours in the given day day
-                            costs = self.get_costs(float(turbine_rated_power_in_kW))
-
-                            print("INDEX : ", index)
-                            print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + " total kilowatt hours per day (24 * average kWh) during it's lifetime")
-                            print("this turbine has costed " + str(costs))
-                            print("# GROUND TRUTH: dollars for the average daily kWhour production = " + str(costs / average_power))
-                            print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
-                            print()
+                    # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
+                    if index == 15000 or processed == 4000:
+                        done_processing = True
 
 
-                            # GROUND TRUTH: dollars for each average mWhours per day
-                            ground_truth_dollar_per_kWh = costs / average_power
+            # save the numpy array of data
+            np.save('dataset2_raw.npy', dataset)
+        except:
+            # save the tensors of data (emergency API crash condition)
+            # save the numpy array of data
+            np.save('dataset2_raw.npy', dataset)
 
-                            # append the observation (1 is a placeholder for the turbine type)
-                            dataset.append([turbine_manufacturer + " " + turbine_model, latitude, longitude, ground_truth_dollar_per_kWh])
-                            processed += 1
-
-                    
-                # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-                if index == 15000 or processed == 1:
-                    done_processing = True
-
-
-        # save the tensors of data
-        with open("dataset2.txt", 'w') as f:
-            for obs in dataset:
-                f.write(str(obs))
-            f.flush()
-        f.close()
-        dataset_as_tensor = torch.tensor(dataset, dtype=torch.float32)
-        torch.save(dataset_as_tensor, f = "dataset2.pt")
         
         
     
