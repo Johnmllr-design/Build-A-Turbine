@@ -20,7 +20,8 @@ function Fullscreen(props) {
     const [centerPos, setPos] = useState({lat : 40, lng : 265})
     const [dz, setZoom] = useState(4.6)
     const [turbines, setTurbine] = useState([]);
-    const [selectedTurbine, setSelected] = useState("select a type");
+    const [selectedTurbine, setSelected] = useState("select a type above");
+    const [mapClicked, setClick] = useState(false);
     const username = props.username;
   
 
@@ -28,6 +29,7 @@ function Fullscreen(props) {
     async function addTurbine(username, type, date) {
         try {
         const backendApiString = "http://localhost:8080/addturbine/" + username + "/" + type + "/" + date;
+        console.log("adding turbine with url ", backendApiString);
         const response = await fetch(backendApiString);
         const result = await response.text();
         console.log("Backend result: ", result);
@@ -36,13 +38,15 @@ function Fullscreen(props) {
         }
     }
 
+    /* function to ensure a turbine has been properly selected before adding to user queue */
+    function selected(){
+        return (selectedTurbine !== "select a type above" && mapClicked);
+    }
+
 
 
     return(
-        <div>
-            <div className='regular_card'>
-                Welcome, {username}
-            </div>
+        <div className='container'>
             {/*turbine sidebar component*/}
             <TurbineSidebar newTurbines={turbines}/>
             {/*api provider component*/}
@@ -63,6 +67,7 @@ function Fullscreen(props) {
                     disableDefaultUI={true}
                     onDblclick={() => {console.log("you clicked the Dbl!")}}
                     onClick={(e) => {
+                    setClick(true);
                     document.getElementById("long").value = e.detail.latLng.lng 
                     document.getElementById("lat").value = e.detail.latLng.lat}}
                     >
@@ -82,25 +87,25 @@ function Fullscreen(props) {
             {/*new turbine component*/}
             <div className= 'regular_card'>
                 <ScrollBar selectedTurbine={selectedTurbine} setSelected={setSelected}/>
-                <input className='input' id="type" placeholder={selectedTurbine}/>
-                <input className='input' id="long" placeholder='provide turbine longitude'/>
-                <input className='input' id="lat" placeholder='provide turbine latitude'/><br/>
+                <div className='div3' id="type">{selectedTurbine}</div>
+                <input className='input' id="long" placeholder='click map for longitude'/>
+                <input className='input' id="lat" placeholder='click map forlatitude'/><br/>
                 <button className="btn" onClick={() => {
+                            if(selected()){
+                                /* set the new user's turbines for the sidebar */
+                                setTurbine(turbines => [...turbines, {
+                                type: selectedTurbine, 
+                                long: document.getElementById("long").value, 
+                                lat:document.getElementById("lat").value
+                                }])  
+                                
+                                /* make a call to the backend to store this turbine in the database*/
+                                const date = new Date();
+                                const officialDate = "" + date.getMonth().toString() + "-" + date.getDate().toString() + "-" + date.getFullYear().toString();
+                                console.log(officialDate);
 
-                    /* set the new user's turbines for the sidebar */
-                    setTurbine(turbines => [...turbines, {
-                    type: selectedTurbine, 
-                    long: document.getElementById("long").value, 
-                    lat:document.getElementById("lat").value
-                    }])  
-                    
-                    /* make a call to the backend to store this turbine in the database*/
-                    const date = new Date();
-                    const officialDate = "" + date.getMonth().toString() + "-" + date.getDate().toString() + "-" + date.getFullYear().toString();
-                    console.log(officialDate);
-
-                    addTurbine(username, selectedTurbine, officialDate);
-
+                                addTurbine(username, selectedTurbine, officialDate);
+                        }
                     }}>add turbine location</button>
             </div>
         </div>

@@ -15,18 +15,29 @@ function TurbineCard(props) {
 
 
   async function getModelPrediction(){
-    const apiString = "http://localhost:8080/makeprediction";
-    const result = await fetch(apiString);
-    console.log(result);
-    const textResults = await result.text();
+
+    // string to query the pytorch model
+    const apiString = "http://127.0.0.1:8000/prediction";
+
+    // make a get request
+    const result = await fetch(apiString, { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: turbine.type, longitude : turbine.long, latitude : turbine.lat})});
+
+    const json = await result.json();
+    console.log(json.returnedVal);
+
+    // get the results as a string
+    const textResults = (await json.returnedVal);
     return textResults;
   }
 
   return (
-    <div className='elegant-card'>
+    <div className='div2'>
       {turbine.type} at {Math.floor(turbine.lat)}, {Math.floor(turbine.long)}
       <button className='btn' onClick={() => {setPred(getModelPrediction())}}>Get an AI value estimate!</button>
-      <button className='div' > {pred} </button>
+      <div className='div3' > {pred} </div>
     </div>
   )
 }

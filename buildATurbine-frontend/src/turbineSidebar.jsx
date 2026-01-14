@@ -10,7 +10,7 @@ function TurbineSidebar(props) {
     console.log(current_turbines);
 
     return (
-        <div>
+        <div className='scrolldiv-2'>
             {current_turbines.map((turbine, i) => {
                 return <TurbineCard key={i} turb={turbine}/>
             })}

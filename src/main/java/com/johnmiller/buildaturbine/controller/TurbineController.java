@@ -2,17 +2,21 @@ package com.johnmiller.buildaturbine.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+import java.net.http.*;
+
 import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 
 
 
 @RequestMapping("")
-@CrossOrigin(origins="http://localhost:5176")
+@CrossOrigin(origins="http://localhost:5173")
 @RestController
 public class TurbineController {
     
@@ -58,11 +62,5 @@ public class TurbineController {
         String response = turbineService.addTurbine(username, type, date);;
         System.out.println(response);
         return response;
-    }
-
-    /* Making a new prediction */
-    @GetMapping("/makeprediction")
-    public Double makePrediction() {
-        return Math.random();
     }
 }
