@@ -12,6 +12,19 @@ import './App.css'
 function TurbineCard(props) {
   const turbine = props.turb;
   const [pred, setPred] = useState('?')
+  const current_turbines = props.allturbs;
+  const setTurbines = props.setTurbines;
+
+  function removeTurbine(){
+    let arr = []
+    for (const turbine of current_turbines){
+      if (turbine.valid){
+        arr.push(turbine);
+      }
+    }
+    setTurbines(arr);
+  }
+  
 
 
   async function getModelPrediction(){
@@ -26,7 +39,6 @@ function TurbineCard(props) {
       body: JSON.stringify({ type: turbine.type, longitude : turbine.long, latitude : turbine.lat})});
 
     const json = await result.json();
-    console.log(json.returnedVal);
 
     // get the results as a string
     const textResults = (await json.returnedVal);
@@ -38,6 +50,7 @@ function TurbineCard(props) {
       {turbine.type} at {Math.floor(turbine.lat)}, {Math.floor(turbine.long)}
       <button className='btn' onClick={() => {setPred(getModelPrediction())}}>Get an AI value estimate!</button>
       <div className='div3' > {pred} </div>
+      <button className='btn' onClick={() => {turbine.valid = false; removeTurbine();}}> Remove this turbine</button>
     </div>
   )
 }

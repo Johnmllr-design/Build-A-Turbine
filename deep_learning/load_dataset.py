@@ -1,6 +1,9 @@
 import torch
 import numpy
+import pandas as pd
 import torch.nn as nn
+import openpyxl
+import csv
 import re
 
 class clean_dataset():
@@ -25,9 +28,6 @@ class clean_dataset():
             elif index == 2 or index == 3 or index == 4:
                 cur.append(float(value))
             index += 1
-        
-        # normalize the data
-        # dataset = self.normalize_data(dataset)
         
 
 
@@ -60,42 +60,22 @@ class clean_dataset():
         f.close()
         return strings
 
-    # perform min/max normalization
-    def normalize_data(self, dataset):
-        lat = [dat[1] for dat in dataset]
-        long = [dat[2] for dat in dataset]
-        pred = [dat[3] for dat in dataset]
-        minLat = min(lat)
-        minLong = min(long)
-        minobs = min(pred)
-        rangeLat = abs(max(lat) - min(lat))
-        rangeLong = abs(max(long) - min(long))
-        rangeObs = abs(max(pred) - min(pred))
-        min_max_values = [minLat, rangeLat, minLong, rangeLong, minobs, rangeObs]   # save the min/max range normalization values for normalizing the inference
-        numpy.save(file='min_max_normalization_values.npy', arr=min_max_values)
-
-        # normalize the dataset
-        for observation in dataset:
-            observation[1] = ((observation[1] - minLat) / rangeLat)
-            observation[2] = ((observation[2] - minLong) / rangeLong)
-            observation[3] = ((observation[3] - minobs) / rangeObs)
-        return dataset
-
 
 
 
 
 # driver code for a one-time cleaning and saving of the sataset to the directory
-#
-# this dataset returns the normalized dataset as a numpy array with string turbine labels
-# example: ['Vestus, 0.4, 0.33, 0.21]
-#
 
 if __name__ == '__main__':
-    clean_dataset().clean_data()
-    print("")
-    arr = numpy.load('dataset_rawdata.npy')
-    print(arr)
+    # Open the file for reading ('r')
+    data = []
+    with open("Power_curves.csv", mode='r') as csvfile:
 
+        # parse each row into a dictionary
+        data = csv.DictReader(csvfile)
+
+        # append each given row to the ground truth list
+        for row in data:
+            print(str(row['Manufucturer Name']) + " " + str(row['Turbine Name']))
 
         

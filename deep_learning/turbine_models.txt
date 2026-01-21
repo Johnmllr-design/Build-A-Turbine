@@ -133,3 +133,9 @@ at percentage 0.08004, New Turbine Model Found: DW-52-900 manufacturer: EWT
 at percentage 0.08308, New Turbine Model Found: G90-2.0 manufacturer: Gamesa
 
 at percentage 0.08358, New Turbine Model Found: GE3.6-137 manufacturer: GE Wind
+
+
+{'case_id': 3086247, 'faa_ors': '35-032287', 'faa_asn': '2018-WTW-802-OE', 'usgs_pr_id': None, 't_state': 'NM', 't_county': 'Curry County', 't_fips': '35009', 'p_name': 'Grady', 'p_year': 2019, 'p_tnum': 84, 'p_cap': 220.5, 't_manu': 'Siemens Gamesa Renewable Energy', 
+'t_model': 'SG-2.625-120', 't_cap': 2625, 't_hh': 85.0, 't_rd': 120.0, 't_rsa': 11309.73, 't_ttlh': 145.1, 't_conf_atr': 3, 
+'t_conf_loc': 3, 't_img_date': None, 't_img_src': 'Maxar', 'xlong': -103.23357, 'ylat': 34.78212, 'eia_id': 60317, 't_retrofit': 0, 
+'t_retro_yr': None, 't_offshore': 0}

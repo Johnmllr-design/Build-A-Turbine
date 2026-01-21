@@ -29,10 +29,8 @@ function Fullscreen(props) {
     async function addTurbine(username, type, date) {
         try {
         const backendApiString = "http://localhost:8080/addturbine/" + username + "/" + type + "/" + date;
-        console.log("adding turbine with url ", backendApiString);
         const response = await fetch(backendApiString);
         const result = await response.text();
-        console.log("Backend result: ", result);
         } catch (error) {
             console.log(error);
         }
@@ -48,7 +46,7 @@ function Fullscreen(props) {
     return(
         <div className='container'>
             {/*turbine sidebar component*/}
-            <TurbineSidebar newTurbines={turbines}/>
+            <TurbineSidebar turbines={turbines} setTurbines={setTurbine}/>
             {/*api provider component*/}
             <APIProvider apiKey='AIzaSyBTgKunKe6FIf4zdhWSjZh1oZZ76lhEG9I'>
                 <div style={{height : "590px", width : "1290px", borderStyle : 'solid', 
@@ -65,7 +63,6 @@ function Fullscreen(props) {
                     gestureHandling={true}
                     colorScheme='DARK'
                     disableDefaultUI={true}
-                    onDblclick={() => {console.log("you clicked the Dbl!")}}
                     onClick={(e) => {
                     setClick(true);
                     document.getElementById("long").value = e.detail.latLng.lng 
@@ -76,7 +73,7 @@ function Fullscreen(props) {
                         turbines.map((turb, i) => 
                             {return(
                                 <AdvancedMarker key={i} position={{lat : Number(turb.lat), lng :  Number(turb.long)}}>
-                                    <Pin background = "pink" glyphColor="pink" borderColor="black" scale={0.5}/>
+                                    <Pin background = "pink" glyphColor="pink" borderColor="black" scale={0.5} />
                                 </AdvancedMarker>)
                             })
                         }
@@ -96,7 +93,8 @@ function Fullscreen(props) {
                                 setTurbine(turbines => [...turbines, {
                                 type: selectedTurbine, 
                                 long: document.getElementById("long").value, 
-                                lat:document.getElementById("lat").value
+                                lat:document.getElementById("lat").value,
+                                valid:true
                                 }])  
                                 
                                 /* make a call to the backend to store this turbine in the database*/

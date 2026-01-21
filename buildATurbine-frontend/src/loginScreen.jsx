@@ -33,7 +33,6 @@ function LoginScreen() {
             const apiString = "http://localhost:8080/makenewuser/" + username;
             const response = await fetch(apiString);
             const result = await response.text();
-            console.log(result);
             }catch(error){
                 console.log(error);
             }

@@ -14,9 +14,11 @@ from typing import List
 import torch
 import requests
 import numpy as np
-from utils import get_power_curve_dataset, get_string, to_array_float, match_key_to_value, string_to_int
+import pandas as pd
+import random
 import csv
 import signal
+from utils import normalize_model_string, get_speed
 
 
 class TimeoutException(Exception):
@@ -29,14 +31,28 @@ signal.signal(signal.SIGALRM, timeout_handler)
 
 
 
-#TurbineDatasetCurator is the data-gathering module underpinning buildATurbine's efficacious logic
+# TurbineDatasetCurator is the data-gathering module underpinning buildATurbine's efficacious logic
 class TurbineDatasetCurator:
 
     # initialize the class with the dataset
     def __init__(self):
-        self.power_curve_data = get_power_curve_dataset()
         self.base_weather_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
         self.base_turbine_url = "https://energy.usgs.gov/api/uswtdb/v1/turbines?&"
+        self.known_turbines = []
+        with open("Power_curves.csv", mode='r') as csvfile:
+
+            # parse each row into a dictionary
+            data = csv.DictReader(csvfile)
+
+            # append each given row to the ground truth list
+            for row in data:
+                self.known_turbines.append(row)
+
+        
+        self.models = []
+        for row in  self.known_turbines:
+            if normalize_model_string(row['Turbine Name']) != None:
+                self.models.append(normalize_model_string(row['Turbine Name']))
 
 
         
@@ -45,27 +61,29 @@ class TurbineDatasetCurator:
     # data-based calculations of daily electricity production
     # track the number of days the turbine has been producing energy, and the amount of energy produced.
     # make an API call to see what the weather has been like for the lifetime of the current turbine
-    # ! Preconditions: longitude and latitude must be decimal strings
-    def calculate_average_power(self, longitude:str, latitude:str, start_date: str, end_date:str, wind_speeds: List, corresponding_power_outputs: List):
-
+    def calculate_power(self, longitude:str, latitude:str, start_date: str, end_date:str, turbine_specifics:dict):
+        print([longitude, latitude, start_date, end_date])
         days_productive = 0
-        net_electricity_production = 0
+        electricity_production = 0
         API_endpoint = self.base_weather_url + latitude + "," + longitude + "/" + start_date + "/" + end_date +  "?key=X2VF5PX638PV2KE6F8BK37RX4&include=days&elements=datetime,windspeedmean"
+        print("the endpoint is " + API_endpoint)
         response = requests.get(API_endpoint)
+        
 
-
+        # if a succesful call, make calculation
         if response.status_code == 200:
             json = response.json()
             daily_wind_values = json['days']
 
             for i, day in enumerate(daily_wind_values):
-                wind_speed = float(day['windspeedmean'])
-                best_key_index = match_key_to_value(wind_speed, wind_speeds)
-                net_electricity_production += corresponding_power_outputs[best_key_index]
+                wind_speed = day['windspeedmean']
+                print(str(wind_speed) + " matches with " + str(get_speed(wind_speed)))
+                electricity_production += float(turbine_specifics[get_speed(wind_speed)])
                 days_productive += 1
                         
             # return the average kWd-production over the lifetime of the turbine ()
-            return (net_electricity_production / days_productive)
+            print("the average electricity produces is " + str(electricity_production / days_productive))
+            return (electricity_production / days_productive)
         
         else:
             print("unable to access this turbines wind history from the weather API")
@@ -76,119 +94,80 @@ class TurbineDatasetCurator:
     # create_dataset provides the core functionality for creating the inputs +  ground truth information for the pytorch model
     # to learn from. It iterates throug the turbine dataset, retrieving the necessary data from each turbine to 
     # quantify the turbines' value
-    def get_dataset(self):
+    def get_dataset(self, i):
         dataset = []
+        turbine_embeddings = {}
         try:
             done_processing = False
-            index = 0
+            index = i
             processed = 0
             while not done_processing:
                 print(index)
                 # make an API call to the USGS
-                new_datapoint = []  # holder of new data
                 response = requests.get(self.base_turbine_url + "offset=" + str(index) + "&limit=1")
-                index += 1      
+                new_turbine_observation = response.json()[0]
+                found_turbine = False
+                index += 1
 
+                # find its corresponding dataset turbine
+                for turbine in self.known_turbines:
+                    if new_turbine_observation['t_model'] == turbine['Turbine Name']:
+                        found_turbine = True
+                        print("found the TURBINE!!")
+                        average_kW_production = self.calculate_power(
+                            str(new_turbine_observation['xlong']), 
+                            str(new_turbine_observation['ylat']), 
+                            str(new_turbine_observation['p_year']) + "-01-01",
+                            "2025-12-12", 
+                            turbine)
 
-                # If unable to get turbine information, skip turbine and continue
-                if response.status_code == 200 and len(response.json()) != 0:
-                    turbine_info = response.json()[0]
-                    longitude = turbine_info['xlong']
-                    latitude = turbine_info['ylat']
-                    year_operational = turbine_info['p_year']
-                    turbine_model = turbine_info['t_model']
-                    turbine_manufacturer = turbine_info['t_manu']
-                    turbine_rated_power_in_kW = turbine_info['t_cap']
+                        kW_per_dollar = average_kW_production / (float(new_turbine_observation['t_cap']) * 1000)   
+                        # print it's final dataset observation
+                        print([new_turbine_observation['t_model'], new_turbine_observation['ylat'], new_turbine_observation['xlong'], kW_per_dollar])
+    
 
-                    # Get the turbine power curve based on the 
-                    if turbine_model != None:
-                        result = self.get_turbine_curve(turbine_model)
-                        if result == None:
-                            continue
-                        else:
-                            start_date = str(year_operational) + "-01-01"
-                            end_date = "2025-12-12"
-                            
-                            try:
-                                signal.alarm(30)  # ⏱ timeout in seconds
+                        if new_turbine_observation['t_model'] not in turbine_embeddings:
 
-                                res = self.calculate_average_power(
-                                    str(longitude),
-                                    str(latitude),
-                                    start_date,
-                                    end_date,
-                                    result[0],
-                                    result[1]
-                                )
+                            # save the embedding if it's a new embedding
+                            embedding = [random.random() * 50, random.random() * 50, random.random() * 50]
+                            turbine_embeddings[new_turbine_observation['t_model']] = embedding
 
-                            except TimeoutException:
-                                print("❌ calculate_average_power took too long")
-                                res = None
-
-                            finally:
-                                signal.alarm(0)  # cancel the alarm
-                            if res != None:
-                                print("the average kwH per day is ")
-                                average_power = (res * 24) # convert to total kWhours in the given day day
-                                costs = self.get_costs(float(turbine_rated_power_in_kW))
-
-                                print("INDEX : ", index)
-                                print("this turbine " + turbine_manufacturer+ " " + turbine_model + " produced an average power of " + str(average_power) + " total kilowatt hours per day (24 * average kWh) during it's lifetime")
-                                print("this turbine has costed " + str(costs))
-                                print("# GROUND TRUTH: dollars for the average daily kWhour production = " + str(costs / average_power))
-                                print("processed turbine " + str(processed + 1) + " on to the next turbine\n")
-                                print()
-
-
-                                # GROUND TRUTH: dollars for each average mWhours per day
-                                ground_truth_dollar_per_kWh = costs / average_power
-
-                                # append the observation (1 is a placeholder for the turbine type)
-                                dataset.append([turbine_manufacturer + " " + turbine_model, latitude, longitude, ground_truth_dollar_per_kWh])
-                                processed += 1
-
+                            # append the final observation
+                            dataset.append([embedding[0], embedding[1], embedding[2],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
                         
-                    # check if we've gotten sufficient data observations. if so break the loop and save the dataset to a .pt file
-                    if index == 15000 or processed == 4000:
-                        done_processing = True
+                        else:
+                            # existing embedding case
+                            dataset.append([turbine_embeddings[new_turbine_observation['t_model']][0], turbine_embeddings[new_turbine_observation['t_model']][1], turbine_embeddings[new_turbine_observation['t_model']][2],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
+                        processed += 1
+                        break
 
-
-            # save the numpy array of data
-            np.save('dataset2_raw.npy', dataset)
+                if not found_turbine:
+                    print("couldnt find the turbine ")
+            
+                if processed == 1000:
+                    np.save('dataset.np', dataset)
+                    np.save('embeddings.np', turbine_embeddings)
+                    done_processing = True
         except:
-            # save the tensors of data (emergency API crash condition)
-            # save the numpy array of data
-            np.save('dataset2_raw.npy', dataset)
-
-        
+            print("there was an exception")
+            if len(dataset) > 100:
+                    np.save('exception_dataset.np', dataset)
+                    np.save('exception_embeddings.np', turbine_embeddings)
+            self.get_dataset(index)
+                    
         
     
 
-    # find the matching furve for the provided turbine
-    def get_turbine_curve(self, turbine_model: str) -> List:
-            
-            # get the reduced string for ease of string comparison
-            turbine_model_reduced_string = get_string(turbine_model)
-
-            # Iterate through the power curves dataset to find a matching turbine's wind curve
-            # if no matching curve found, return none
-            for row in self.power_curve_data:
-                reduced_row_string = get_string(row['name'])
-                if len(reduced_row_string) > 0:
-                    if reduced_row_string in turbine_model_reduced_string or turbine_model_reduced_string in reduced_row_string:
-                        if row['has_power_curve'] == "True":
-                           return to_array_float(row['power_curve_wind_speeds']), to_array_float(row['power_curve_values'])
-                        else:
-                            return None
-            return None
 
 
-    # return the industry standard $1000/kW of rated power times the actual rated power to 
-    # obtain a coarse understanding of the cost to build the given turbine
-    def get_costs(self, rated_power : float):
-        return (1000 * rated_power)
-        
+if __name__ == '__main__':
+    obj = TurbineDatasetCurator()
+    obj.get_dataset(1)
+    print([random.random(), random.random(), random.random()])
 
 
-obj = TurbineDatasetCurator()
-obj.get_dataset()
+
+
+
+
+

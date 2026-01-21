@@ -6,7 +6,7 @@ import Fullscreen from './fullscreen.jsx'
 import App from './welcomescreen.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <div>
+  <div> 
     <App/>
   </div>
 )

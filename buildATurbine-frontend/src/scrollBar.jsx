@@ -11,8 +11,6 @@ function ScrollBar(props) {
 
     const selector = props.setSelected;
     const choice = props.selectedTurbine;
-    console.log("the selector is ", selector);
-    console.log("the current choice of turbine is ", choice);
 
     return (
         <div className='scrolldiv'>

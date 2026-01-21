@@ -8,148 +8,28 @@ import numpy
 
 
 
-# get the power curve data into an array for storage
-def get_power_curve_dataset():
-    data = []
-    # Open the file for reading ('r')
-    with open("/Users/johnmiller/Desktop/buildaturbine/deep_learning/wind_turbine_library.csv", mode='r') as csvfile:
 
-        # parse each row into a dictionary
-        reader = csv.DictReader(csvfile)
-
-        # append each given row to the ground truth list
-        for row in reader:
-            data.append(row)
-    return data
-
-
-# get the user turbine options
-def get_user_options():
-    data = []
-    # Open the file for reading ('r')
-    with open("/Users/johnmiller/Desktop/buildaturbine/deep_learning/wind_turbine_library.csv", mode='r') as csvfile:
-
-        # parse each row into a dictionary
-        reader = csv.DictReader(csvfile)
-
-        # append each given row to the ground truth list
-        for row in reader:
-            if row["has_power_curve"]:
-                data.append([row["manufacturer"], row["name"]])
-    with open("makes_and_models.txt", mode="w") as text_file:
-        text_file.write(str(data))
-        text_file.flush()
-    
-    
-
-
-
- # remove non alphanumeric chars 
-def get_string(input_string : str) -> str:
+# normalize turbine model names
+def normalize_model_string(string):
     ret = ""
-    for char in input_string:
-        if char.isalnum():
-            ret += char
-    return ret.lower()
+    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+    contains_char = False
+    for char in string:
+        if char.isalpha():
+            ret = ret + char.lower()
+            contains_char = True
+        elif char in numbers:
+            ret = ret + char
+    if contains_char:
+        return ret
 
 
-
-# convert the array represented as a string to an array
-def to_array(array_string: str):
-    ret = []
-    cur = ""
-    print("we got the initial wind values " + array_string)
-    for char in array_string:
-        if char.isdigit():
-            if int(char) > 0:
-                    cur += char
-        else:
-            if cur != "":
-                ret.append(int(cur))
-                cur = ""
-    return ret
-
-# convert the array represented as a string to an array (for floats)
-def to_array_float(array_string: str):
-    ret = []
-    cur = ""
-    for char in array_string:
-        if char.isdigit() or char == '.':
-            cur += char
-        else:
-            if cur != "":
-                ret.append(float(cur))
-                cur = ""
-    return ret
-
-
-# Find the corresponding key for the wind power curve
-def match_key_to_value(key: float, corresponding_values: List):
-    if key > max(corresponding_values):
-        return 0
-    else:
-        max_difference = 10000
-        best_index = 0
-        for i in range(0, len(corresponding_values)):
-            if abs(corresponding_values[i] - key) < max_difference:
-                max_difference = abs(corresponding_values[i] - key)
-                best_index = i
-        return best_index
-    
-
-def string_to_int(s):
-    ret = ""
-    for char in s:
-        ret += str(ord(char))
-        ret += "0"
-    print(ret)
-    return int(ret)
-
-# find the corresponding turbine embedding
-def find_embeddings(type, types):
-    for i, possible in enumerate(types):
-        if possible == type:
-            return i
-    return -1
-
-# normalize and standardize a provided input to a tensor-ready option
-def normalize_input(input:List):
-
-    normalized_input = []
-
-    normalization_values = numpy.load('min_max_normalization_values.npy')
-    type_strings = numpy.load('turbine_types.npy')
-    type_embeddings = torch.load('type_embeddings.pt')
-    print(normalization_values)
-    print(type_strings)
-    print(type_embeddings)
-    correct_embedding = type_embeddings[find_embeddings(input[0], type_strings)]
-    for value in correct_embedding:
-        normalized_input.append(value)
-    normalized_input.append((input[1] - normalization_values[0] / normalization_values[1])) # normalize the latitude
-    normalized_input.append((input[2] - normalization_values[2] / normalization_values[3])) # normalize the latitude
-    print("normalized input is ", normalized_input)
-    return normalized_input
-
-# normalize and standardize a provided input to a tensor-ready option
-def normalize_input_2(input:List):
-    normalized_input = []
-    type_strings = numpy.load('turbine_types.npy')
-    type_embeddings = torch.load('type_embeddings.pt')
-    correct_embedding = type_embeddings[find_embeddings(input[0], type_strings)]
-    for value in correct_embedding:
-        normalized_input.append(value)
-    normalized_input.append(input[1])
-    normalized_input.append(input[2])
-    print("normalized input is ", normalized_input)
-    return normalized_input
-
-
-# normalize and standardize a provided input to a tensor-ready option
-def de_normalize_output(output):
-    normalization_values = numpy.load('min_max_normalization_values.npy')
-    return output * normalization_values[5] + normalization_values[4]
-
-
-
-
+def get_speed(daily_speed):
+    speeds = [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20,20.5,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,31.5,32,32.5,33,33.5,34,34.5,35]
+    diff = 10000
+    ret = -1
+    for speed in speeds:
+        if abs(float(daily_speed) - speed) < diff:
+            diff = abs(float(daily_speed) - speed)
+            ret = speed
+    return str(ret)
