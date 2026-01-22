@@ -66,8 +66,8 @@ class TurbineDatasetCurator:
         days_productive = 0
         electricity_production = 0
         API_endpoint = self.base_weather_url + latitude + "," + longitude + "/" + start_date + "/" + end_date +  "?key=X2VF5PX638PV2KE6F8BK37RX4&include=days&elements=datetime,windspeedmean"
-        print("the endpoint is " + API_endpoint)
         response = requests.get(API_endpoint)
+        print(response.status_code)
         
 
         # if a succesful call, make calculation
@@ -76,13 +76,15 @@ class TurbineDatasetCurator:
             daily_wind_values = json['days']
 
             for i, day in enumerate(daily_wind_values):
-                wind_speed = day['windspeedmean']
-                print(str(wind_speed) + " matches with " + str(get_speed(wind_speed)))
-                electricity_production += float(turbine_specifics[get_speed(wind_speed)])
-                days_productive += 1
+                try: 
+                    wind_speed = day['windspeedmean']
+                    if wind_speed != None:
+                        electricity_production += float(turbine_specifics[get_speed(wind_speed)])
+                        days_productive += 1
+                except:
+                    print("unable to access the wind speed for some reason after " + str(days_productive) + " accesses")
                         
             # return the average kWd-production over the lifetime of the turbine ()
-            print("the average electricity produces is " + str(electricity_production / days_productive))
             return (electricity_production / days_productive)
         
         else:
@@ -95,8 +97,7 @@ class TurbineDatasetCurator:
     # to learn from. It iterates throug the turbine dataset, retrieving the necessary data from each turbine to 
     # quantify the turbines' value
     def get_dataset(self, i):
-        dataset = []
-        turbine_embeddings = {}
+        dataset = np.load('dataset.npy', allow_pickle=True).tolist()
         try:
             done_processing = False
             index = i
@@ -113,7 +114,7 @@ class TurbineDatasetCurator:
                 for turbine in self.known_turbines:
                     if new_turbine_observation['t_model'] == turbine['Turbine Name']:
                         found_turbine = True
-                        print("found the TURBINE!!")
+                        average_kW_production = None
                         average_kW_production = self.calculate_power(
                             str(new_turbine_observation['xlong']), 
                             str(new_turbine_observation['ylat']), 
@@ -122,37 +123,22 @@ class TurbineDatasetCurator:
                             turbine)
 
                         kW_per_dollar = average_kW_production / (float(new_turbine_observation['t_cap']) * 1000)   
-                        # print it's final dataset observation
-                        print([new_turbine_observation['t_model'], new_turbine_observation['ylat'], new_turbine_observation['xlong'], kW_per_dollar])
-    
+                        # print it's final dataset observatio
+                        print("the new observation is " + str([new_turbine_observation['t_model'], new_turbine_observation['ylat'], new_turbine_observation['xlong'], kW_per_dollar]))                     
+                        dataset.append([new_turbine_observation['t_model'],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
+                        print("APPENDED A NEW OBSERVATION")
 
-                        if new_turbine_observation['t_model'] not in turbine_embeddings:
-
-                            # save the embedding if it's a new embedding
-                            embedding = [random.random() * 50, random.random() * 50, random.random() * 50]
-                            turbine_embeddings[new_turbine_observation['t_model']] = embedding
-
-                            # append the final observation
-                            dataset.append([embedding[0], embedding[1], embedding[2],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
-                        
-                        else:
-                            # existing embedding case
-                            dataset.append([turbine_embeddings[new_turbine_observation['t_model']][0], turbine_embeddings[new_turbine_observation['t_model']][1], turbine_embeddings[new_turbine_observation['t_model']][2],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
                         processed += 1
                         break
 
                 if not found_turbine:
                     print("couldnt find the turbine ")
             
-                if processed == 1000:
-                    np.save('dataset.np', dataset)
-                    np.save('embeddings.np', turbine_embeddings)
-                    done_processing = True
+                if processed >= 1 and found_turbine:
+                    np.save('dataset.npy', np.array(dataset, dtype=object))
+                    print("dataset has length " + str(len(dataset)))
         except:
             print("there was an exception")
-            if len(dataset) > 100:
-                    np.save('exception_dataset.np', dataset)
-                    np.save('exception_embeddings.np', turbine_embeddings)
             self.get_dataset(index)
                     
         
@@ -162,8 +148,13 @@ class TurbineDatasetCurator:
 
 if __name__ == '__main__':
     obj = TurbineDatasetCurator()
+    data = []
+    embeddings = {}
+    dataarr = np.array(data)
+    embeddingsarr = np.array(embeddings)
+    np.save('dataset.npy', dataarr)
+    np.save('embeddings.npy', embeddingsarr)
     obj.get_dataset(1)
-    print([random.random(), random.random(), random.random()])
 
 
 

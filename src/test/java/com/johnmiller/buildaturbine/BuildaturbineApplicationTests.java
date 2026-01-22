@@ -23,20 +23,20 @@ class BuildaturbineApplicationTests {
 	}
 
 
-	/* Successful cases tests */
-	@Test
-	void makeUser(){
-		assertEquals(controller.makeNewUser("John"), "made a new user with username John", "the username works");
-	}
+	// /* Successful cases tests */
+	// @Test
+	// void makeUser(){
+	// 	assertEquals(controller.makeNewUser("John"), "made a new user with username John", "the username works");
+	// }
 
-	/* Unsuccessful cases tests */
-	@Test
-	void getWrongUser(){
-		assertEquals(controller.getUser("Jake"), "username doesn't correspond to any existing users");
-	}
+	// /* Unsuccessful cases tests */
+	// @Test
+	// void getWrongUser(){
+	// 	assertEquals(controller.getUser("Jake"), "username doesn't correspond to any existing users");
+	// }
 
-	@Test
-	void makeEmptuUser(){
-		assertEquals(controller.makeNewUser(""),"Username cannot be null");
-	}
+	// @Test
+	// void makeEmptuUser(){
+	// 	assertEquals(controller.makeNewUser(""),"Username cannot be null");
+	// }
 }

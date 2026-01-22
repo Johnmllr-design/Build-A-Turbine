@@ -6,10 +6,6 @@ from fastapi import Request
 import numpy
 from model import TurbinePredictionModel
 import uvicorn
-from utils import normalize_input
-from utils import normalize_input_2
-from utils import de_normalize_output
-
 
 
 app = FastAPI()
@@ -38,10 +34,10 @@ class TurbineObject(BaseModel):
 @app.post("/prediction")
 def Request(req : TurbineObject):
     input = [req.type, req.latitude, req.longitude]
-    input = torch.tensor(normalize_input_2(input), dtype=torch.float32)
+    input = torch.tensor(input, dtype=torch.float32)
     model.eval()
     inference = model.forward(input)
-    prediction = str(de_normalize_output(inference.item()))[0:8] + " kWh per day"
+    prediction = str(inference.item())[0:8] + " kWh per day"
     return {"returnedVal" : prediction}
 
 

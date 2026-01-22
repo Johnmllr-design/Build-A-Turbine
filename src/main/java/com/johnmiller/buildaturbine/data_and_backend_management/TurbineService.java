@@ -1,5 +1,9 @@
 package com.johnmiller.buildaturbine.data_and_backend_management;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import io.micrometer.common.lang.NonNull;
+import jakarta.validation.Valid;
 
 import java.util.Optional;
 
@@ -9,18 +13,23 @@ import java.util.Optional;
 public class TurbineService {
 
     public TurbineRepository turbineRepository;
+    private BCryptPasswordEncoder encoder;
 
-    /* use a turbine repository inerface to make CcRUD operations 
+    /* use a turbine repository inerface to make CRUD operations 
     in a springful way,making use of spring-boot's application 
     context container to manage an instance of Turbine repository for us
     */
     public TurbineService(TurbineRepository tbr){
         this.turbineRepository = tbr;
+        this.encoder = new BCryptPasswordEncoder();
     }
 
-    public String makeNewUser(String username){
-        // make a user profile
-        UserProfile up = new UserProfile(username);
+    /* make a new user */
+    public String makeNewUser(String username, String password){
+        // make a user profile with an encoded password
+        System.out.println("in service, making a new user");
+        String encodedPassword = this.encoder.encode(password);
+        UserProfile up = new UserProfile(username, encodedPassword);
 
         //save the user's profile to DB
         turbineRepository.save(up);
@@ -29,8 +38,23 @@ public class TurbineService {
         return "made a new user with username " + username;
     }
 
+    public Boolean userExists(String username, String password){
+        //find the user based on the username
+        Optional<UserProfile> userProfile = turbineRepository.findById(username);
+
+        //if not null, return if the username matches the known password
+        if (!userProfile.isEmpty()){
+            UserProfile profile = userProfile.get();
+            return encoder.matches(password, profile.getPassword());
+        // else, return false
+        }else{
+            System.out.println("the user does not exist so returning false");
+            return false;
+        }
+    }
+
     /* add a turbine to the  users UserProfile turbine array */
-    public String addTurbine(String username, String turbineType, String turbineCreationDate) {
+    public String addTurbine(@NonNull String username, String turbineType, String turbineCreationDate) {
         try{
             UserProfile userProfile = turbineRepository.getReferenceById(username);
             userProfile.addATurbine(turbineType, turbineCreationDate);
@@ -39,26 +63,5 @@ public class TurbineService {
         }catch (jakarta.persistence.EntityNotFoundException exception){
             return "couldn't find a corresponding user for the username";
         }
-    }
-
-    public String getUser(String username){
-        //find the user based on the username
-        Optional<UserProfile> userProfile = turbineRepository.findById(username);
-
-        //if not null, turn the data object to a string
-        if (!userProfile.isEmpty()){
-            String ret = "The user has the following information: \nUsername:";
-            UserProfile profile = userProfile.get();
-            ret = ret + " " + profile.getUserName() + " \n and turbines:";
-            for (Turbine t : profile.getTurbs()){
-                ret = ret + " " + t.getTurbineModel();
-            }
-            return ret;
-
-        // else, throw an error and return 
-        }else{
-            return "username doesn't correspond to any existing users";
-        }
-    }
-      
+    } 
 }

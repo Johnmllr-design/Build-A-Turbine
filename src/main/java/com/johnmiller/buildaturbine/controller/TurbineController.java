@@ -2,15 +2,15 @@ package com.johnmiller.buildaturbine.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
-import java.net.http.*;
-
+import com.johnmiller.buildaturbine.data_and_backend_management.CreateUserRequest;
 import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
+
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 
@@ -28,30 +28,26 @@ public class TurbineController {
         this.turbineService = service;
     }
 
-    /* Welcome string*/
-    @GetMapping("/dummy")
-    public String dummy() {
-        return  "You called the java backend";
+
+    /* make new users */
+    @PostMapping("/makenewuser")
+    public Boolean makeNewUser(@RequestBody CreateUserRequest body) {
+        String username = body.username();
+        String password = body.password();
+        System.out.printf("in controller the result of already existing is %s\n", turbineService.userExists(username, password));
+        if(!turbineService.userExists(username, password)){
+            turbineService.makeNewUser(username, password);
+            return true;
+        }
+        return false;
     }
 
-
-    /* Welcome string*/
-    @GetMapping("/getUser/{username}")
-    public String getUser(@PathVariable String username) {
-        if (username.length() == 0){
-            return "Username cannot be null";
-        }
-        String currentProfile = turbineService.getUser(username);
-        return currentProfile;
-    }
-
-
-    @GetMapping("/makenewuser/{username}")
-    public String makeNewUser(@PathVariable String username) {
-        if (username.length() == 0){
-            return "Username cannot be null";
-        }
-        return turbineService.makeNewUser(username);
+    /* log in a existing user */
+    @PostMapping("/loginuser")
+    public Boolean loginUser(@RequestBody CreateUserRequest body) {
+        String username = body.username();
+        String password = body.password();
+        return turbineService.userExists(username, password);
     }
 
     @GetMapping("/addturbine/{username}/{type}/{date}")

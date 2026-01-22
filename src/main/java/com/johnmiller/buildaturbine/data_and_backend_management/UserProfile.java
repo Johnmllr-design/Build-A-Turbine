@@ -14,14 +14,18 @@ public class UserProfile{
     private String userName;
 
     @Column
+    private String password;
+
+    @Column
     @ElementCollection
     private List<Turbine> userTurbines;
 
     public UserProfile(){
     }
 
-    public UserProfile(String name){
+    public UserProfile(String name, String password){
         this.userName = name;
+        this.password = password;
         this.userTurbines = new ArrayList<Turbine>();
     }
 
@@ -39,6 +43,10 @@ public class UserProfile{
 
     public String getUserName(){
         return this.userName;
+    }
+
+    public String getPassword(){
+        return this.password;
     }
 
     public void setUserTurb(List<Turbine> turbines){
