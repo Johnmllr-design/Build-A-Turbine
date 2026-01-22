@@ -2,6 +2,7 @@ package com.johnmiller.buildaturbine.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.johnmiller.buildaturbine.data_and_backend_management.CreateNewTurbine;
 import com.johnmiller.buildaturbine.data_and_backend_management.CreateUserRequest;
 import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
 
@@ -50,8 +51,12 @@ public class TurbineController {
         return turbineService.userExists(username, password);
     }
 
-    @GetMapping("/addturbine/{username}/{type}/{date}")
-    public String addTurbine(@PathVariable String username, @PathVariable String type, @PathVariable String date) {
+    @PostMapping("/addturbine")
+    public String addTurbine(@RequestBody CreateNewTurbine newTurbine) {
+        String username = newTurbine.username();
+        String type = newTurbine.type();
+        String date = newTurbine.date();
+
         if (username.length() == 0 || type.length() == 0 || date.length() == 0){
             return "Username and tyrbine information cannot be null";
         }
