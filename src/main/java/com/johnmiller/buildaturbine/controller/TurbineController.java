@@ -31,15 +31,16 @@ public class TurbineController {
 
     /* make new users */
     @PostMapping("/makenewuser")
-    public Boolean makeNewUser(@RequestBody CreateUserRequest body) {
-        String username = body.username();
-        String password = body.password();
-        System.out.printf("in controller the result of already existing is %s\n", turbineService.userExists(username, password));
-        if(!turbineService.userExists(username, password)){
-            turbineService.makeNewUser(username, password);
-            return true;
-        }
-        return false;
+    public String makeNewUser(@RequestBody CreateUserRequest body) {
+        return "you called the backend!!";
+        // String username = body.username();
+        // String password = body.password();
+        // System.out.printf("in controller the result of already existing is %s\n", turbineService.userExists(username, password));
+        // if(!turbineService.userExists(username, password)){
+        //     turbineService.makeNewUser(username, password);
+        //     return true;
+        // }
+        // return false;
     }
 
     /* log in a existing user */
