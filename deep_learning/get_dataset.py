@@ -107,34 +107,41 @@ class TurbineDatasetCurator:
                 # make an API call to the USGS
                 response = requests.get(self.base_turbine_url + "offset=" + str(index) + "&limit=1")
                 new_turbine_observation = response.json()[0]
-                found_turbine = False
                 index += 1
+                found = False
 
                 # find its corresponding dataset turbine
                 for turbine in self.known_turbines:
                     if new_turbine_observation['t_model'] == turbine['Turbine Name']:
-                        found_turbine = True
-                        average_kW_production = None
-                        average_kW_production = self.calculate_power(
-                            str(new_turbine_observation['xlong']), 
-                            str(new_turbine_observation['ylat']), 
-                            str(new_turbine_observation['p_year']) + "-01-01",
-                            "2025-12-12", 
-                            turbine)
+                        try:
+                            found = True
+                            signal.alarm(45)  # ⏱ timeout in seconds
+                            average_kW_production = self.calculate_power(
+                                str(new_turbine_observation['xlong']), 
+                                str(new_turbine_observation['ylat']), 
+                                str(new_turbine_observation['p_year']) + "-01-01",
+                                "2025-12-12", 
+                                turbine)
 
-                        kW_per_dollar = average_kW_production / (float(new_turbine_observation['t_cap']) * 1000)   
-                        # print it's final dataset observatio
-                        print("the new observation is " + str([new_turbine_observation['t_model'], new_turbine_observation['ylat'], new_turbine_observation['xlong'], kW_per_dollar]))                     
-                        dataset.append([new_turbine_observation['t_model'],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
-                        print("APPENDED A NEW OBSERVATION")
 
-                        processed += 1
+                            kW_per_dollar = average_kW_production / (float(new_turbine_observation['t_cap']) * 1000)   # use the factor of 1000 * rated capacity as 
+                                                                                                                       # a ground truth of turbine price to get a proportion of kW-per-dollar
+                            
+                            # print it's final dataset observatio
+                            print("the new observation is " + str([new_turbine_observation['t_model'], new_turbine_observation['ylat'], new_turbine_observation['xlong'], kW_per_dollar]))                     
+                            dataset.append([new_turbine_observation['t_model'],  new_turbine_observation['xlong'], new_turbine_observation['ylat'], kW_per_dollar])
+                            print("APPENDED A NEW OBSERVATION")
+
+                            processed += 1
+                        except TimeoutException:
+                            print("❌ calculate_average_power took too long")
+                        finally:
+                            signal.alarm(0)  # cancel the alarm
                         break
 
-                if not found_turbine:
-                    print("couldnt find the turbine ")
+
             
-                if processed >= 1 and found_turbine:
+                if processed >= 1 and found:
                     np.save('dataset.npy', np.array(dataset, dtype=object))
                     print("dataset has length " + str(len(dataset)))
         except:
@@ -148,13 +155,7 @@ class TurbineDatasetCurator:
 
 if __name__ == '__main__':
     obj = TurbineDatasetCurator()
-    data = []
-    embeddings = {}
-    dataarr = np.array(data)
-    embeddingsarr = np.array(embeddings)
-    np.save('dataset.npy', dataarr)
-    np.save('embeddings.npy', embeddingsarr)
-    obj.get_dataset(1)
+    obj.get_dataset(5494)
 
 
 
