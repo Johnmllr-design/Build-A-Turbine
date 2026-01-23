@@ -2,12 +2,13 @@ package com.johnmiller.buildaturbine.data_and_backend_management;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-@Entity
+@Document
 public class UserProfile{
 
     @Id

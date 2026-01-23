@@ -55,13 +55,15 @@ public class TurbineService {
 
     /* add a turbine to the  users UserProfile turbine array */
     public String addTurbine(@NonNull String username, String turbineType, String turbineCreationDate) {
-        try{
-            UserProfile userProfile = turbineRepository.getReferenceById(username);
-            userProfile.addATurbine(turbineType, turbineCreationDate);
-            turbineRepository.save(userProfile);
-            return "Added turbine to " + username + " of type " + turbineType;
-        }catch (jakarta.persistence.EntityNotFoundException exception){
-            return "couldn't find a corresponding user for the username";
+        Optional<UserProfile> userProfile = turbineRepository.findById(username);
+            if (userProfile.isPresent()){
+                UserProfile profile = userProfile.get();
+                profile.addATurbine(turbineType, turbineCreationDate);
+                turbineRepository.save(profile);
+                return "Added turbine to " + username + " of type " + turbineType;
+            }else{
+                return "user profile not fould";
+            }
         }
-    } 
 }
+
