@@ -41,13 +41,7 @@ public class TurbineService {
         Optional<UserProfile> userProfile = repository.findById(username);
 
         //if not null, return if the username matches the known password
-        if (!userProfile.isEmpty()){
-            UserProfile profile = userProfile.get();
-            return encoder.matches(password, profile.getPassword());
-        // else, return false
-        }else{
-            return false;
-        }
+        return userProfile.isPresent();
     }
 
     /* add a turbine to the  users UserProfile turbine array */
