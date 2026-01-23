@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  the repository CRUD operations, which provides us with leeway to simply inject
  the repository into other classes */
 @Repository
-interface TurbineRepository extends MongoRepository<UserProfile, String>{
+public interface UserProfileRepository extends MongoRepository<UserProfile, String>{
 }
 
 
