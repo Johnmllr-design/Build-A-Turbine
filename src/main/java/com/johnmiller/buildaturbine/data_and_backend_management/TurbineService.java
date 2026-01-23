@@ -38,20 +38,44 @@ public class TurbineService {
 
     public Boolean userExists(String username, String password){
         //find the user based on the username
-        return repository.existsById(username);
+        if (username != null){
+            return repository.existsById(username);
+        }else{
+            return false;
+        }
+    }
+
+    public Boolean validLogin(String username, String password){
+        //find the user based on the username
+        if (username != null){
+            if (repository.existsById(username)){
+                Optional<UserProfile> user = repository.findById(username);
+                UserProfile profile = user.get();
+                return encoder.matches(password, profile.getPassword());
+            }
+            else{
+                return false;
+            }
+        } else{
+            return false;
+        }
     }
 
     /* add a turbine to the  users UserProfile turbine array */
     public String addTurbine(@NonNull String username, String turbineType, String turbineCreationDate) {
-        Optional<UserProfile> userProfile = repository.findById(username);
-            if (userProfile.isPresent()){
-                UserProfile profile = userProfile.get();
-                profile.addATurbine(turbineType, turbineCreationDate);
-                repository.save(profile);
-                return "Added turbine to " + username + " of type " + turbineType;
-            }else{
-                return "user profile not fould";
+        if (username != null){
+            Optional<UserProfile> userProfile = repository.findById(username);
+                if (userProfile.isPresent()){
+                    UserProfile profile = userProfile.get();
+                    profile.addATurbine(turbineType, turbineCreationDate);
+                    repository.save(profile);
+                    return "Added turbine to " + username + " of type " + turbineType;
+                }else{
+                    return "user profile not fould";
             }
+        } else {
+        return "user profile not fould";
         }
+    }
 }
 

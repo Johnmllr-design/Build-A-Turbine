@@ -8,8 +8,6 @@ import com.johnmiller.buildaturbine.data_and_backend_management.TurbineService;
 
 
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -48,7 +46,7 @@ public class TurbineController {
     public Boolean loginUser(@RequestBody CreateUserRequest body) {
         String username = body.username();
         String password = body.password();
-        return turbineService.userExists(username, password);
+        return turbineService.validLogin(username, password);
     }
 
     @PostMapping("/addturbine")
