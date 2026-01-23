@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 
-@RequestMapping("https://determined-luck-production-4525.up.railway.app")
 @CrossOrigin(origins="https://build-a-turbine-frontend-v287.vercel.app")
 @RestController
 public class TurbineController {
