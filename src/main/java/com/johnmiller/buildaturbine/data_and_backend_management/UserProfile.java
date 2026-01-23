@@ -3,10 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Id;
+import org.springframework.data.annotation.Id;
 
 @Document
 public class UserProfile{
@@ -14,11 +11,8 @@ public class UserProfile{
     @Id
     private String userName;
 
-    @Column
     private String password;
 
-    @Column
-    @ElementCollection
     private List<Turbine> userTurbines;
 
     public UserProfile(){
