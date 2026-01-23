@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RequestMapping("")
-@CrossOrigin(origins="https://build-a-turbine-frontend-v-git-4be107-johnmllr-designs-projects.vercel.app/")
+@CrossOrigin(origins="https://build-a-turbine-frontend-v287.vercel.app")
 @RestController
 public class TurbineController {
     
