@@ -38,10 +38,9 @@ public class TurbineService {
 
     public Boolean userExists(String username, String password){
         //find the user based on the username
-        Optional<UserProfile> userProfile = repository.findById(username);
+        return repository.existsById(username);
 
         //if not null, return if the username matches the known password
-        return userProfile.isPresent();
     }
 
     /* add a turbine to the  users UserProfile turbine array */
