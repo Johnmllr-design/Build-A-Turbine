@@ -7,18 +7,3 @@ Check out the site at https://build-a-turbine-frontend-v287.vercel.app/
 
 
 
-
-
-[ User ]
-   |
-   v
-[ React Frontend ]
-   |
-   v
-[ Spring Boot API ]
-   |
-   |----> [ ML Model Service ]
-   |
-   |----> [ MongoDB Database ]
-   |
-   |----> [ External APIs (Maps, Weather, etc.) ]
