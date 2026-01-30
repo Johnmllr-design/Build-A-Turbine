@@ -86,6 +86,7 @@ public class TurbineService {
                     UserProfile profile = userProfile.get();
                     profile.removeTurbine(turbineType, turbineCreationDate); // TODO: implement turbine removal
                     repository.save(profile);
+                    System.out.println("removed turbine to " + username + " of type " + turbineType);
                     return "removed turbine to " + username + " of type " + turbineType;
                 }else{
                     return "user profile not fould";

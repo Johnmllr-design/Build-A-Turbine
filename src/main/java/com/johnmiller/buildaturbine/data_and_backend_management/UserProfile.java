@@ -40,6 +40,9 @@ public class UserProfile{
             if (turb.getTurbineModel() != turbineDate || turb.getDate() != turbineDate){
                 newTurbineList.add(turb);
             }
+            else{
+                System.out.println("found the bad turbine");
+            }
         }
         this.userTurbines = newTurbineList;
     }
