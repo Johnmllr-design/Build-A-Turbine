@@ -74,7 +74,24 @@ public class TurbineService {
                     return "user profile not fould";
             }
         } else {
-        return "user profile not fould";
+            return "user profile not fould";
+        }
+    }
+
+    /* remove a turbine from the  users UserProfile turbine array */
+    public String removeTurbine(@NonNull String username, String turbineType, String turbineCreationDate) {
+        if (username != null){
+            Optional<UserProfile> userProfile = repository.findById(username);
+                if (userProfile.isPresent()){
+                    UserProfile profile = userProfile.get();
+                    profile.removeTurbine(turbineType, turbineCreationDate); // TODO: implement turbine removal
+                    repository.save(profile);
+                    return "removed turbine to " + username + " of type " + turbineType;
+                }else{
+                    return "user profile not fould";
+            }
+        } else {
+            return "user profile not fould";
         }
     }
 }

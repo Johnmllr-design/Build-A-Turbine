@@ -61,4 +61,15 @@ public class TurbineController {
         System.out.println(response);
         return response;
     }
+
+    @PostMapping("/removeturbine")
+    public String removeTurbine(@RequestBody CreateNewTurbine removableTurbine) {
+        String username = removableTurbine.username();
+        String type = removableTurbine.type();
+        String date = removableTurbine.date();
+        String response = turbineService.removeTurbine(username, type, date);;
+        return response;
+    }
+
+    
 }

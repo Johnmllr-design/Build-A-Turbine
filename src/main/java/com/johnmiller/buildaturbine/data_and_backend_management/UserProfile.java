@@ -31,6 +31,18 @@ public class UserProfile{
         // add the object to the user's collection
         userTurbines.add(newTurbine);
     }
+    
+
+    public void removeTurbine(String turbineModel, String turbineDate){
+        // remake the user turbine list without the specified bad turbine
+        ArrayList<Turbine> newTurbineList = new ArrayList<>();
+        for (Turbine turb : userTurbines) {
+            if (turb.getTurbineModel() != turbineDate || turb.getDate() != turbineDate){
+                newTurbineList.add(turb);
+            }
+        }
+        this.userTurbines = newTurbineList;
+    }
 
     public void setUserName(String name){
         this.userName = name;
