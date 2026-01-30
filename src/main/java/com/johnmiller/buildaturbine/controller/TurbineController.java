@@ -64,7 +64,7 @@ public class TurbineController {
 
     @PostMapping("/removeturbine")
     public String removeTurbine(@RequestBody CreateNewTurbine removableTurbine) {
-        System.out.println("removing the turbine %s from %s\n", removableTurbine.type(), removableTurbine.date());
+        System.out.printf("removing the turbine %s from %s\n", removableTurbine.type(), removableTurbine.date());
         String username = removableTurbine.username();
         String type = removableTurbine.type();
         String date = removableTurbine.date();
