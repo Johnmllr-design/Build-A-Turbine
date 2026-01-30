@@ -1,5 +1,4 @@
 package com.johnmiller.buildaturbine.controller;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.johnmiller.buildaturbine.data_and_backend_management.CreateNewTurbine;
@@ -64,7 +63,7 @@ public class TurbineController {
 
     @PostMapping("/removeturbine")
     public String removeTurbine(@RequestBody CreateNewTurbine removableTurbine) {
-        System.out.printf("removing the turbine %s from %s\n", removableTurbine.type(), removableTurbine.date());
+        System.out.printf("removing the turbine %s from %s\n", removableTurbine.type(), removableTurbine.username());
         String username = removableTurbine.username();
         String type = removableTurbine.type();
         String date = removableTurbine.date();
