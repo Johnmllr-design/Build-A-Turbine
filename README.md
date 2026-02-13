@@ -3,6 +3,11 @@ perform database-controller logic
 
 ------------------------------------------------------------------------------------
 
+fork and clone this repo for personal modification, or open up a PR for furtherance of the backend ML logic and 
+MVC framework expansion.
+
+------------------------------------------------------------------------------------
+
 Check out the site at https://build-a-turbine-frontend-v287.vercel.app/
 
 
